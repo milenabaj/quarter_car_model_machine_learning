@@ -1,36 +1,31 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Aug 31 14:09:35 2020
-
-@author: milena
+@author: Milena Bajic (DTU Compute)
 """
-
-Simulation of acceleration signal produced when a car is traversing a road with cracks, potholes and patches.
-Car parameters: Golden car model
-Road length: 100m
-Defect geometries:
-    patch:
-        dmin = 0.005; dmax =   0.05; dincr =  0.005;   % minimum, maximum and increment of severity
-        wmin = 0.250; wmax =  5.00; wincr =  0.0500;   % minimum, maximum and increment of length
-    pothole:
-        dmin = -0.010; dmax = -0.25; dincr = -0.005;   % minimum, maximum and increment of severity
-        wmin =  0.050; wmax =  0.50; wincr =  0.0250;   % minimum, maximum and increment of length
-    crack;
-        dmin = -0.020; dmax = -0.30; dincr = -0.005;   % minimum, maximum and increment of severity
-        wmin =  0.004; wmax =  0.04; wincr =  0.0020;   % minimum, maximum and increment of length
-Speed: 0-120 km/h with step=2km/h
-Sampling frequency: around 300Hz (can differ by few Hzs between examples)
-Cases with too narrow defects to be recorded with this sampling frequency, are removed during preprocessing.
+==================
+REQUIRED INPUT
+==================
+Run Quater-car Matlab simulation module to produce single-defect cases. The module is provided by Asmus Skar, DTU Civil Engineering). Save output files in Matlab-files directory.
 
 
-Directory contents:
-- Matlab-files: output of simulation module - each .m file corresponds to one defect type, geometry and speed.
-- train-val-test: all matlab files are converted to numpy arrays/floats/string and organized into a pandas and dataframe
-which is saved as a pickle file ('full_simulation.pkl'). Each row in dataframe corresponds to one matlab file. The full file is
-split into 60%/20%/20% train/valid/test files. The too narrow defects without any point are removed.
-- train-val-test-normalized: the train file from train-val-test is scaled to 0-1 range. The scaler is saved and applied to
-valid and test files.
-- train-val-test-normalized-split-into-windows: A sliding window of size=2m and step=1 point is applied on train/valid/test files from train-val-test-normalized.
-The results are saved in this directory. Those are the final results for analysis.
-- scaler.pkl: train scaler file.
+=============================================
+PREPROCESSING
+=============================================
+Prepare data using scripts from data_preparation_module directory.
+ a) Run data_preparation_module/process_matlab_files.py to process matlab files and create train-val-test files
+ b) Run data_preparation_module/normalize_data.py to create train-val-test-normalized files
+ c) Run data_preparation_module/transform_to_window_dataset.pyto create train-val-test-normalized-split-into-windows
+ Please provide correct input and output directories as arguments when running the scripts.
+
+Output is the data directory with the following subdirectories:
+  - Matlab-files (=Required input): output of simulation module - each .mat file corresponds to one defect type, geometry and speed.
+  - train-val-test: pickled Pandas dataframes where each row stores information about one simulation.
+    Stored is the full file ('full_simulation.pkl') and train/valid/test files (60%/20%/20% split).
+    The too narrow defects without any point recorded with the selected sampling frequency are removed.
+  - train-val-test-normalized: the train-val-test/train.pkl file is scaled to 0-1 range. The scaler info is saved and applied to
+    valid and test files.
+  - train-val-test-normalized-split-into-windows: A sliding window of size = 2m and a step of 1 point is applied on train/valid/test files from train-val-test-normalized.
+  - scaler.pkl: train scaler file.
+
+==============================================
+MODELLING
+=============================================
