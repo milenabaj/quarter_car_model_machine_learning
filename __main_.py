@@ -6,13 +6,17 @@ Main script.
 
 import sys,os, glob, time
 import subprocess
+from multiprocessing import cpu_count
 import logging
 import argparse
 import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import Dataset, DataLoader
 from utils import data_loaders
+
 
 if __name__ == "__main__":
 
@@ -23,8 +27,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--load_subset', default = False,
                         help = 'If load_subset is true, will process 100 rows only (use for testing purposes).')
-    parser.add_argument('--filetype', default = 'train',
-                        help = 'Choose between train, test or valid. This file will be processed and output created.')
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
@@ -35,7 +37,7 @@ if __name__ == "__main__":
     load_subset = args.load_subset
     input_dir = args.input_dir
     out_dir = args.output_dir
-    filetype = args.filetype
+    batch_size = 1
 
 
     #=== LOGGER ===#
@@ -65,6 +67,17 @@ if __name__ == "__main__":
 
     # ==== MAIN  ====#
     # ===============#
-    dataset = data_loaders.Datasets(input_dir, filetype, file_handler = fh, formatter = formatter)
+    train_dataset = data_loaders.Dataset(input_dir_base = input_dir, filetype = 'train', batch_size = batch_size,
+                                         file_handler = fh, formatter = formatter)
+    #f = train_dataset.load_file(0)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=cpu_count())
 
+    # loop over epochs
+      # loop over dataset names
+          # make a dataset and dataloader with batch_size=full file for each file
+            # per each batch do:
+            # Backward propagation and weight update
+            #model.zero_grad()
+            #train_loss.backward()
+            #optimizer.step()
 
