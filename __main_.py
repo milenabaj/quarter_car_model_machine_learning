@@ -12,10 +12,10 @@ import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-
+from utils import data_loaders
 
 if __name__ == "__main__":
+
 
     #=== GET ARGUMENTS FROM THE USER ===#
     #===================================#
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument('--filetype', default = 'train',
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows'.format(git_repo_path),
-                        help = 'Input directory containing prepared data split into windows.')
+                        help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
 
@@ -58,6 +58,9 @@ if __name__ == "__main__":
     # Make output directory
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+    log.info('Output dir is: {0}'.format(out_dir))
 
-    # ==== MAIN STUFF ====#
-    # ====================#
+
+    # ==== MAIN  ====#
+    # ===============#
+    dataset = data_loaders.Datasets(input_dir, filetype, file_handler = fh)
