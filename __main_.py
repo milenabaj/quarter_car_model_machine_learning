@@ -25,7 +25,7 @@ if __name__ == "__main__":
                         help = 'If load_subset is true, will process 100 rows only (use for testing purposes).')
     parser.add_argument('--filetype', default = 'train',
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
-    parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows'.format(git_repo_path),
+    parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
@@ -58,9 +58,13 @@ if __name__ == "__main__":
     # Make output directory
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    log.info('Output dir is: {0}'.format(out_dir))
+
+    log.info('Input dir is: {0}'.format(input_dir))
+    log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
 
 
     # ==== MAIN  ====#
     # ===============#
-    dataset = data_loaders.Datasets(input_dir, filetype, file_handler = fh)
+    dataset = data_loaders.Datasets(input_dir, filetype, file_handler = fh, formatter = formatter)
+
+
