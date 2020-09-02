@@ -2,14 +2,19 @@
 @author: Milena Bajic (DTU Compute)
 """
 ==================
-REQUIRED INPUT
-==================
-Run Quater-car Matlab simulation module to produce single-defect cases. The module is provided by Asmus Skar, DTU Civil Engineering). Save output files in Matlab-files directory.
-
+PACKAGE STRUCTURE
+=================
+data_preparation_module: preprocessing modules
+machine_learning_modules: machine learning models
+utils: various util tools (dataloaders, plotting)
+__main__py : main script
 
 =============================================
 PREPROCESSING
 =============================================
+Required input:
+ Run Quater-car Matlab simulation module to produce single-defect cases. The module is provided by Asmus Skar, DTU Civil Engineering). Save output files in Matlab-files directory.
+
 Prepare data using scripts from data_preparation_module directory.
  a) Run data_preparation_module/process_matlab_files.py to process matlab files and create train-val-test files
  b) Run data_preparation_module/normalize_data.py to create train-val-test-normalized files
@@ -29,3 +34,4 @@ Output is the data directory with the following subdirectories:
 ==============================================
 MODELLING
 =============================================
+
