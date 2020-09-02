@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 31 14:09:35 2020
+
+@author: milena
+"""
+
+Simulation of acceleration signal produced when a car is traversing a road with cracks, potholes and patches.
+Car parameters: Golden car model
+Road length: 100m
+Defect geometries:
+    patch:
+        dmin = 0.005; dmax =   0.05; dincr =  0.005;   % minimum, maximum and increment of severity
+        wmin = 0.250; wmax =  5.00; wincr =  0.0500;   % minimum, maximum and increment of length
+    pothole:
+        dmin = -0.010; dmax = -0.25; dincr = -0.005;   % minimum, maximum and increment of severity
+        wmin =  0.050; wmax =  0.50; wincr =  0.0250;   % minimum, maximum and increment of length
+    crack;
+        dmin = -0.020; dmax = -0.30; dincr = -0.005;   % minimum, maximum and increment of severity
+        wmin =  0.004; wmax =  0.04; wincr =  0.0020;   % minimum, maximum and increment of length
+Speed: 0-120 km/h with step=2km/h
+Sampling frequency: around 300Hz (can differ by few Hzs between examples)
+Cases with too narrow defects to be recorded with this sampling frequency, are removed during preprocessing.
+
+
+Directory contents:
+- Matlab-files: output of simulation module - each .m file corresponds to one defect type, geometry and speed.
+- train-val-test: all matlab files are converted to numpy arrays/floats/string and organized into a pandas and dataframe
+which is saved as a pickle file ('full_simulation.pkl'). Each row in dataframe corresponds to one matlab file. The full file is
+split into 60%/20%/20% train/valid/test files. The too narrow defects without any point are removed.
+- train-val-test-normalized: the train file from train-val-test is scaled to 0-1 range. The scaler is saved and applied to
+valid and test files.
+- train-val-test-normalized-split-into-windows: A sliding window of size=2m and step=1 point is applied on train/valid/test files from train-val-test-normalized.
+The results are saved in this directory. Those are the final results for analysis.
+- scaler.pkl: train scaler file.
