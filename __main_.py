@@ -16,12 +16,14 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from utils import data_loaders
-
+from machine_learning_modules import encoder_decoder
+from utils import various_utils
 
 if __name__ == "__main__":
 
-    #=== GET ARGUMENTS FROM THE USER ===#
-    #===================================#
+    # === SETTINGS === #
+    # ================ #
+
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--load_subset', default = False,
@@ -39,47 +41,31 @@ if __name__ == "__main__":
 
     # Other settings
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 'full_dataset'
-    num_workers = 0
+    batch_size = 100000 #'full_dataset'
+    num_workers = 8 #0
     n_epochs = 1
 
-
-    #=== LOGGER ===#
-    #==============#
-    #Create logger
-    log = logging.getLogger('Main')
-    log.setLevel(logging.DEBUG)
-    for h in list(log.handlers):
-        log.removeHandler(h)
-
-    # Create formatter and add it to the handlers
-    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-
-    # Create file handler
-    log_filename = '{0}/info.log'.format(out_dir)
-    fh = logging.FileHandler(log_filename, mode='w')
-    fh.setFormatter(formatter)
-    log.addHandler(fh)
-
-    # Make output directory
+    # Create output directory
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
+    # Logger
+    log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
     log.info('Input dir is: {0}'.format(input_dir))
     log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
 
+    encoder_decoder.print()
 
-    # ==== TRAIN ====#
+
+    # ==== TRAINING ====#
     # ===============#
     mode = 'acc-severity'
-    train_datasets = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = num_workers,
-                                           file_handler = fh, formatter = formatter)
-
-    #valid_datasets = data_loaders.get_datasets(input_dir, 'valid', mode, batch_size = batch_size, num_workers = num_workers,
-                                          # file_handler = fh, formatter = formatter)
-
+    train_datasets = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = num_workers)
+    sys.exit(0)
     train_dataset = ConcatDataset(train_datasets)
-    train_dataloader = DataLoader(train_dataset, batch_size = 100000, num_workers=8)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=num_workers)
+
+    #valid_datasets = data_loaders.get_datasets(input_dir, 'valid', mode, batch_size = batch_size, num_workers = num_workers)
 
     # Model
     '''

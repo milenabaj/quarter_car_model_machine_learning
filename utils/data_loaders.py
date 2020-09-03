@@ -4,7 +4,7 @@ PyTorch Data loading utils.
 @author: Milena Bajic (DTU Compute)
 """
 
-import sys,os, glob, time, logging
+import sys,os, glob, time
 import subprocess
 import argparse
 import pickle
@@ -15,13 +15,12 @@ import torch
 from torch.utils.data import Dataset, DataLoader, IterableDataset
 from quarter_car_model_machine_learning.utils.various_utils import *
 
+# Get logger for module
+dlog = get_mogule_logger("data_loaders")
 
 # get root logger by logging.getLogger() and its handler
 class Dataset(Dataset):
-    def __init__(self, filename, filetype, mode, max_length = None, file_handler = None,  formatter = None):
-
-        #Create logger
-        self.dlog = get_logger('Datasets', file_handler, formatter)
+    def __init__(self, filename, filetype, mode, max_length = None):
 
         # Take input
         self.filename = filename
@@ -38,7 +37,7 @@ class Dataset(Dataset):
         self.n_samples = self.acc.shape[0]
 
     def load_data(self):
-        self.dlog.info('Loading: {0}\n'.format(self.filename))
+        dlog.info('Loading: {0}\n'.format(self.filename))
 
         file = load_pickle_full_path(self.filename)
         self.acc = file.acceleration.to_numpy()
@@ -76,7 +75,7 @@ class Dataset(Dataset):
         return self.n_samples
 
 
-def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0, file_handler = None, formatter = None):
+def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0):
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
@@ -96,12 +95,12 @@ def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_wor
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
 
-        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length,
-                                              file_handler = file_handler, formatter = formatter)
+        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
         if batch_size=='full_dataset':
             batch_size = dataset.n_samples
 
         dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
         #data.append((filename.split('/')[-1], dataset,dataloader))
         data.append(dataset)
+
     return data
