@@ -20,7 +20,6 @@ from utils import data_loaders
 
 if __name__ == "__main__":
 
-
     #=== GET ARGUMENTS FROM THE USER ===#
     #===================================#
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
@@ -31,15 +30,17 @@ if __name__ == "__main__":
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
-    parser.add_argument('--batch-size', default = 512,
-                        help='Batch size - used only during training.')
 
     # Parse arguments
     args = parser.parse_args()
     load_subset = args.load_subset
     input_dir = args.input_dir
     out_dir = args.output_dir
-    batch_size = args.batch_size
+
+    # Other settings
+    batch_size = 'full_dataset'
+    num_workers = 0
+    n_epochs = 1
 
 
     #=== LOGGER ===#
@@ -70,8 +71,30 @@ if __name__ == "__main__":
     # ==== TRAIN ====#
     # ===============#
     mode = 'acc-severity'
-    train_data = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = 8,
+    train_data = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = num_workers,
                                            file_handler = fh, formatter = formatter)
+
+    valid_data = data_loaders.get_datasets(input_dir, 'valid', mode, batch_size = batch_size, num_workers = num_workers,
+                                           file_handler = fh, formatter = formatter)
+
+
+    d = train_data[0][2]
+    dataset = train_data[0][1]
+    for batch_index, (features, targets) in enumerate(d):
+       log.info('Batch index')
+
+
+    sys.exit(0)
+    for epoch_index in range(0, n_epochs):
+        log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
+        #if epoch_index%100==0:
+        #    log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
+
+        # Loop over files
+        for (filename, dataset, dataloader) in train_data:
+            log.info('Filename: {0} '.format(filename))
+            for batch_index, (features, targets) in enumerate(dataloader):
+                log.info('Batch index: {0}, features: {1}, targets: {2} '.format(batch_index), features[0], targets[0])
 
     #f = train_dataset.load_file(0)
     #train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=0)

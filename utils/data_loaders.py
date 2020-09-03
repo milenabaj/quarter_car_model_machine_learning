@@ -1,5 +1,5 @@
 """
-Data loading utils.
+PyTorch Data loading utils.
 
 @author: Milena Bajic (DTU Compute)
 """
@@ -15,8 +15,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader, IterableDataset
 from quarter_car_model_machine_learning.utils.various_utils import *
 
-# TRY MULTIPLE DATALOADERS FOR EACH FILE
-# load file inside of getindex
 
 
 '''
@@ -68,50 +66,70 @@ class Dataset(Dataset):
         self.filetype = filetype
         self.mode = mode
 
-        # Mode
-        if self.mode == 'acc-severity':
-            self.use_cols = ['acceleration', 'severity']
-        elif self.mode == 'classification':
-            self.use_cols = ['acceleration', 'window_class']
-        elif self.mode == 'exploration':
-            self.use_cols = ['acceleration', 'window_class', 'speed', 'defect_width', 'defect_height']
-
-        # Load file
-        self.file = self.load_file(self.filename)
+        # Load features and targets
+        self.load_data()
 
         # Number of samples
-        self.length = self.file.shape[0]
+        self.n_samples = self.acc.shape[0]
 
-    def load_file(self, filename):
+    def load_data(self):
+        self.dlog.info('Loading: {0}\n'.format(self.filename))
 
-        self.dlog.info('Loading: {0}\n'.format(filename))
-        return load_pickle_full_path(filename, use_cols = self.use_cols)
+        file = load_pickle_full_path(self.filename)
+        self.acc = file.acceleration.to_numpy()
+        self.get_max_length()
+        self.padded_acc = self.pad_arrays(self.acc)
+        if self.mode == 'acc-severity':
+            self.severity = file.severity.to_numpy()
+            self.severity  = self.pad_arrays(self.severity)
+        elif self.mode == 'classification':
+            self.window_class = file.window_class.to_numpy() # does not need padding
+        elif self.mode == 'exploration':
+            self.file = file
+        return
 
-    def __getindex__(self, index):
+    def get_max_length(self):
+        lengths = [len(s) for s in self.acc]
+        self.max_length = max(lengths)
+        self.max_length_index = lengths.index(self.max_length )
+        return
+
+    def pad_arrays(self, arrays):
+        padded_list = [ np.pad(arr,  (0,(self.max_length-arr.shape[0])),  mode='constant') for arr in arrays ]
+        return np.array(padded_list, dtype=np.float32)
+
+    def __getitem__(self, index):
 
         if self.mode == 'acc-severity':
-            acc = f.acceleration.to_numpy()
-            severity = f.severity.to_numpy()
-            return acc[index], severity[index]
+            return self.acc[index], self.severity[index]
 
         elif self.mode == 'classification':
-            acc = f.acceleration.to_numpy()
-            window_class = f.window_class.to_numpy()
-            return acc[index], window_class[index]
+            return self.acc[index], self.window_class[index]
 
     def __len__(self):
-        return self.length
+        return self.n_samples
 
-    # for batch_idx 0: load 1st file, batch size lines
-    # for batch_idx 1: load 1st file, next batch size lines
-    # define dataset and dataloader outside
-    # dataset needs to remember which file and line was called in the last call
 
-def get_datasets(input_dir, filetype, mode, batch_size = 16, num_workers = 0, file_handler = None, formatter = None):
+def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0, file_handler = None, formatter = None):
+    '''
+    Get a list of (filename, Dataset, Dataloader) for each file in directory.
+    '''
+    print('Finding max length')
+    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        file = load_pickle_full_path(self.filename)
+        acc = file.acceleration.to_numpy()
+        lengths = [len(s) for s in self.acc]
+        self.max_length = max(lengths)
+        self.max_length_index = lengths.index(self.max_length )
+
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+
         dataset =  Dataset(filename=filename, filetype = filetype, mode = mode,
                                               file_handler = file_handler, formatter = formatter)
+        if batch_size=='full_dataset':
+            batch_size = dataset.n_samples
+
         dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
         data.append((filename.split('/')[-1], dataset,dataloader))
     return data
