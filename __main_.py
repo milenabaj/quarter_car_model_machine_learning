@@ -31,13 +31,15 @@ if __name__ == "__main__":
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
+    parser.add_argument('--batch-size', default = 512,
+                        help='Batch size - used only during training.')
 
     # Parse arguments
     args = parser.parse_args()
     load_subset = args.load_subset
     input_dir = args.input_dir
     out_dir = args.output_dir
-    batch_size = 1
+    batch_size = args.batch_size
 
 
     #=== LOGGER ===#
@@ -65,12 +67,18 @@ if __name__ == "__main__":
     log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
 
 
-    # ==== MAIN  ====#
+    # ==== TRAIN ====#
     # ===============#
-    train_dataset = data_loaders.Dataset(input_dir_base = input_dir, filetype = 'train', batch_size = batch_size,
-                                         file_handler = fh, formatter = formatter)
+    mode = 'acc-severity'
+    train_data = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = 8,
+                                           file_handler = fh, formatter = formatter)
+
     #f = train_dataset.load_file(0)
-    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=cpu_count())
+    #train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=0)
+
+    #for data in train_dataloader:
+        #Data is a list containing 64 (=batch_size) consecutive lines of the file
+    #    print(len(data)) #[64,]
 
     # loop over epochs
       # loop over dataset names

@@ -21,7 +21,14 @@ def get_logger(loger_name, file_handler = None,  formatter = None):
 
 def load_pickle(input_dir, string, use_cols = None, row_min = 0, row_max = -1):
     filename = '{0}/{1}'.format(input_dir, string)
-    print('Loading: {0}'.format(filename))
+    with open(filename, "rb") as f:
+        df = pickle.load(f)
+        if use_cols:
+            return df[use_cols].iloc[row_min:row_max]
+        else:
+            return df.iloc[row_min:row_max]
+
+def load_pickle_full_path(filename, use_cols = None, row_min = 0, row_max = -1):
     with open(filename, "rb") as f:
         df = pickle.load(f)
         if use_cols:
