@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from utils import data_loaders
 
 
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     out_dir = args.output_dir
 
     # Other settings
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 'full_dataset'
     num_workers = 0
     n_epochs = 1
@@ -71,39 +72,47 @@ if __name__ == "__main__":
     # ==== TRAIN ====#
     # ===============#
     mode = 'acc-severity'
-    train_data = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = num_workers,
+    train_datasets = data_loaders.get_datasets(input_dir, 'train', mode, batch_size = batch_size, num_workers = num_workers,
                                            file_handler = fh, formatter = formatter)
 
-    valid_data = data_loaders.get_datasets(input_dir, 'valid', mode, batch_size = batch_size, num_workers = num_workers,
-                                           file_handler = fh, formatter = formatter)
+    #valid_datasets = data_loaders.get_datasets(input_dir, 'valid', mode, batch_size = batch_size, num_workers = num_workers,
+                                          # file_handler = fh, formatter = formatter)
 
+    train_dataset = ConcatDataset(train_datasets)
+    train_dataloader = DataLoader(train_dataset, batch_size = 100000, num_workers=8)
 
-    d = train_data[0][2]
-    dataset = train_data[0][1]
-    for batch_index, (features, targets) in enumerate(d):
-       log.info('Batch index')
+    # Model
+    '''
+    model = lstm_seq2seq(device = device, target_len = window_size, with_attention = with_attention)
+    model.to(device)
 
+    optimizer = optim.Adam(model.parameters(),lr=learning_rate)
+    scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
 
-    sys.exit(0)
+    criterion = nn.MSELoss()
+    criterion_valid = nn.MSELoss()
+    '''
+    # Loop over epochs
     for epoch_index in range(0, n_epochs):
         log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
         #if epoch_index%100==0:
         #    log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
 
-        # Loop over files
-        for (filename, dataset, dataloader) in train_data:
-            log.info('Filename: {0} '.format(filename))
-            for batch_index, (features, targets) in enumerate(dataloader):
-                log.info('Batch index: {0}, features: {1}, targets: {2} '.format(batch_index), features[0], targets[0])
+        # Loop over batches
+        #model.train()
+        for batch_index, (features, targets) in enumerate(train_dataloader):
+            print('batch_index',batch_index)
 
-    #f = train_dataset.load_file(0)
-    #train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers=0)
+            # Put into the correct dimensions for LSTM
+            features = features.permute(1,0)
+            features = features.unsqueeze(2).to(device)
+            #print(features.shape)
 
-    #for data in train_dataloader:
-        #Data is a list containing 64 (=batch_size) consecutive lines of the file
-    #    print(len(data)) #[64,]
+            targets = targets.permute(1,0)
+            targets = targets.unsqueeze(2).to(device)
+            #print(targets.shape)
 
-    # loop over epochs
+ # loop over epochs
       # loop over dataset names
           # make a dataset and dataloader with batch_size=full file for each file
             # per each batch do:

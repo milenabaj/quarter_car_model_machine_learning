@@ -16,46 +16,9 @@ from torch.utils.data import Dataset, DataLoader, IterableDataset
 from quarter_car_model_machine_learning.utils.various_utils import *
 
 
-
-'''
-class Dataset(IterableDataset):
-    # needs to be used with n_workers=0 in dataloader
-    def __init__(self, input_dir_base, filetype, batch_size = 1, file_handler = None,  formatter = None):
-
-        # Take input from user
-        self.input_dir = '{0}/{1}'.format(input_dir_base,filetype)
-        self.filetype = filetype
-        self.data_files = glob.glob('{0}/*.pkl'.format(self.input_dir))
-        self.data_files_names_only = [f.split('/')[-1] for f in self.data_files]
-        self.batch_size = batch_size
-        #self.use_cols = ['acceleration', 'window_class', 'speed', 'defect_width', 'defect_height']
-        self.use_cols = ['acceleration', 'severity']
-        self.length = 0
-
-        #Create logger
-        self.dlog = get_logger('Datasets', file_handler, formatter)
-        self.dlog.info('List of input data files: {0}\n'.format(self.data_files_names_only))
-
-    def load_file(self, num):
-        return load_pickle(self.input_dir, self.data_files_names_only[num], use_cols = self.use_cols, row_max=10)
-
-    def __iter__(self):
-
-         #Create an iterator
-        print('Loading ',self.data_files_names_only[0])
-        f = load_pickle(self.input_dir, self.data_files_names_only[0], use_cols = self.use_cols, row_max=10)
-        acc = np.nditer(f.acceleration.to_numpy(),flags=['refs_ok'])
-        sev = np.nditer(f.severity.to_numpy(),flags=['refs_ok'])
-        #f = load_pickle(self.input_dir, self.data_files_names_only[0], use_cols = self.use_cols, row_max=10).iterrows()
-
-        return acc, sev
-
-'''
-
-
-
+# get root logger by logging.getLogger() and its handler
 class Dataset(Dataset):
-    def __init__(self, filename, filetype, mode, file_handler = None,  formatter = None):
+    def __init__(self, filename, filetype, mode, max_length = None, file_handler = None,  formatter = None):
 
         #Create logger
         self.dlog = get_logger('Datasets', file_handler, formatter)
@@ -65,6 +28,8 @@ class Dataset(Dataset):
         self.filename_bare = filename.split('/')[-1]
         self.filetype = filetype
         self.mode = mode
+        if max_length:
+            self.max_length = max_length
 
         # Load features and targets
         self.load_data()
@@ -77,11 +42,12 @@ class Dataset(Dataset):
 
         file = load_pickle_full_path(self.filename)
         self.acc = file.acceleration.to_numpy()
-        self.get_max_length()
-        self.padded_acc = self.pad_arrays(self.acc)
+        if not self.max_length:
+            self.get_max_length()
+        self.acc = self.pad_arrays(self.acc)
         if self.mode == 'acc-severity':
             self.severity = file.severity.to_numpy()
-            self.severity  = self.pad_arrays(self.severity)
+            self.severity = self.pad_arrays(self.severity)
         elif self.mode == 'classification':
             self.window_class = file.window_class.to_numpy() # does not need padding
         elif self.mode == 'exploration':
@@ -114,22 +80,28 @@ def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_wor
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
+    '''
     print('Finding max length')
+    glob_max_length = 0
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(self.filename)
+        file = load_pickle_full_path(filename)
         acc = file.acceleration.to_numpy()
-        lengths = [len(s) for s in self.acc]
-        self.max_length = max(lengths)
-        self.max_length_index = lengths.index(self.max_length )
-
+        lengths = [len(s) for s in acc]
+        max_length = max(lengths)
+        if max_length>glob_max_length:
+            glob_max_length = max_length
+    print('Max length: ', max_length)
+    '''
+    max_length = 2001 # change this (uncomment upper part) for new data
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
 
-        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode,
+        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length,
                                               file_handler = file_handler, formatter = formatter)
         if batch_size=='full_dataset':
             batch_size = dataset.n_samples
 
         dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
-        data.append((filename.split('/')[-1], dataset,dataloader))
+        #data.append((filename.split('/')[-1], dataset,dataloader))
+        data.append(dataset)
     return data
