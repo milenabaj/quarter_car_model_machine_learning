@@ -16,7 +16,6 @@ def get_mogule_logger(logger_name, root_logger_name='Main'):
     # Set the same level as in the root logger
     root_logger = logging.getLogger(root_logger_name)
     log_ed.setLevel(root_logger.getEffectiveLevel())
-    root_logger.info('Creating module logger: {0}'.format(logger_name))
     
     # Remove possible handlers
     for h in list(log_ed.handlers):
