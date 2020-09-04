@@ -16,18 +16,24 @@ def get_mogule_logger(logger_name, root_logger_name='Main'):
     # Set the same level as in the root logger
     root_logger = logging.getLogger(root_logger_name)
     log_ed.setLevel(root_logger.getEffectiveLevel())
-
+    root_logger.info('Creating module logger: {0}'.format(logger_name))
+    
     # Remove possible handlers
     for h in list(log_ed.handlers):
         log_ed.removeHandler(h)
         
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    
     # Create stream handler
-    ch = logging.StreamHandler()
-    log_ed.addHandler(ch)
+    ch_ed = logging.StreamHandler()
+    ch_ed.setFormatter(formatter)
+    log_ed.addHandler(ch_ed)
 
     # Get the file handler from the root logger and add it to the module logger
     for h in list(root_logger.handlers):
-        log_ed.addHandler(h)
+        if isinstance(h,logging.FileHandler):
+            log_ed.addHandler(h)
         
     return log_ed
 

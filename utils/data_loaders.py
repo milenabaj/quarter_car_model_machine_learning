@@ -95,7 +95,7 @@ def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_wor
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
 
-        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
+        dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
         if batch_size=='full_dataset':
             batch_size = dataset.n_samples
 

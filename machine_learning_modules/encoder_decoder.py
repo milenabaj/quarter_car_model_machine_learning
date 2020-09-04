@@ -1,23 +1,25 @@
 """
-Encoder-decoder model for SAME series:
+@author: Milena Bajic (DTU Compute)
+
+encoder-decoder model for SAME series:
 https://github.com/lkulowski/LSTM_encoder_decoder/blob/master/code/lstm_encoder_decoder.py
 https://github.com/pytorch/tutorials/blob/master/intermediate_source/seq2seq_translation_tutorial.py
 attn:
 https://buomsoo-kim.github.io/attention/2020/04/27/Attention-mechanism-21.md/
-"""
 
+"""
 import sys
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from torch.optim import lr_scheduler
 from torch.optim.lr_scheduler import StepLR
 from quarter_car_model_machine_learning.utils.various_utils import *
 
 # Get logger for module
-log_ed = get_mogule_logger("encoder_decoder")
+ed_log = get_mogule_logger("encoder_decoder")
 
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
@@ -115,12 +117,111 @@ class lstm_decoder(nn.Module):
         return prediction, self.hidden
 
 
+class lstm_attention_decoder(nn.Module):
+
+    ''' Decodes hidden state output by encoder '''
+
+    def __init__(self, input_size = 1, hidden_size = 32, output_size = 1, num_layers = 1,
+                 max_length = 277,device = 'cuda'):
+
+        '''
+        : param input_size:     the number of features in the input X
+        : param hidden_size:    the number of features in the hidden state h
+        : param num_layers:     number of recurrent layers (i.e., 2 means there are
+        :                       2 stacked LSTMs)
+        '''
+
+        super(lstm_attention_decoder, self).__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.max_length = max_length
+        self.device = device
+
+        self.attention = nn.Linear(self.hidden_size * 2, self.max_length)
+        self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
+
+        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
+                            num_layers = num_layers)
+        self.linear = nn.Linear(hidden_size, output_size)
+
+
+    def forward(self, x_input, encoder_hidden_states, encoder_outputs = None):
+
+        '''
+        : param x_input:                    should be 2D (batch_size, input_size)
+        : param encoder_hidden_states:      hidden states
+        : return output, hidden:            output gives all the hidden states in the sequence;
+        :                                   hidden gives the hidden state and cell state for the last
+        :                                   element in the sequence
+
+        '''
+        #x_input = x_input.unsqueeze(0) #(batch_size, input_features) -> (1, batch_size, input_features))
+        print('Decoder forward - lstm input: ',x_input.shape)
+        x_input.to(self.device)
+
+        # Hidden states
+        hidden_state = hidden_state[0] # long term memory
+        print('Decoder forward - hidden state input: ',hidden_state.shape)
+        print('Decoder forward - enc. outputs input: ',encoder_outputs.shape)
+
+        # Attention weights
+        e = torch.dot(enc_hidden_states, dec_hidden)
+        attn_weights = F.softmax(e, dim=1)
+        print('Decoder forward - aligned_weights: ',attn_weights.shape)
+
+        # Context vectors
+        context_vectors = torch.bmm(attn_weights.unsqueeze(0),
+                                 encoder_outputs.unsqueeze(0))
+
+        output = torch.cat((embedded[0], attn_applied[0]), 1)
+        output = self.attn_combine(output).unsqueeze(0)
+
+        for i in range(encoder_outputs.size(0)):
+            att = self.attention( torch.cat((hidden_state, encoder_outputs[i].unsqueeze(0)), dim = 2) )
+        print(att.shape)
+        #print(encoder_outputs.size(0))
+
+        sys.exit(0)
+        energy = self.attn(torch.cat((hidden_state, encoder_outputs), dim = 2))
+
+        energy = torch.tanh(energy)
+        print('Decoder forward - lstm input: ',energy.shape)
+
+        # Attention
+        self.attn = self.attn(torch.cat((embedded[0], hidden[0]), 1))
+        self.attn_weights = F.softmax(attn, dim=1)
+
+        # Like no attention decoder
+        lstm_out, self.hidden = self.lstm(x_input, encoder_hidden_states)
+        #print('Decoder forward - lstm_out: ',lstm_out.shape)
+        lstm_out = lstm_out.squeeze(0) #-> [batch size, hidden dim]
+        #print('Decoder forward - linear input: ',lstm_out.shape)
+        prediction = self.linear(lstm_out)
+        #print('Decoder forward - prediction: ',prediction.shape)
+
+        '''
+        # Multiply with attention
+        attn_applied = torch.bmm(attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
+
+        output = torch.cat((embedded[0], attn_applied[0]), 1)
+
+        output = self.attn_combine(output).unsqueeze(0)
+
+        output = F.relu(output)
+        output, hidden = self.gru(output, hidden)
+        '''
+
+        return prediction, self.hidden
+
+
 
 
 class lstm_seq2seq(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 32, target_len = 1000, use_teacher_forcing = True,
+    def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, use_teacher_forcing = True,
                  with_attention = False, device = 'cuda'):
 
         '''
@@ -205,19 +306,4 @@ class lstm_seq2seq(nn.Module):
 
         return outputs
 
-'''
-time_steps = 10
-batch_size = 3
-in_size = 5
-classes_no = 7
 
-model = nn.LSTM(in_size, classes_no, 2)
-input_seq = Variable(torch.randn(time_steps, batch_size, in_size))
-output_seq, _ = model(input_seq)
-last_output = output_seq[-1]
-
-loss = nn.CrossEntropyLoss()
-target = Variable(torch.LongTensor(batch_size).random_(0, classes_no-1))
-err = loss(last_output, target)
-err.backward()
-'''

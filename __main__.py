@@ -27,8 +27,9 @@ if __name__ == "__main__":
 
     # === SETTINGS === #
     # ================ #
-
-    git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
+    git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip() 
+    
+    # Script arguments
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--load_subset', default = False,
                         help = 'If load_subset is true, will process 100 rows only (use for testing purposes).')
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     # Other settings
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     mode = 'acc-severity'
-    batch_size = 100000 #'full_dataset'
+    batch_size = 10 #'full_dataset'
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
@@ -57,7 +58,7 @@ if __name__ == "__main__":
 
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
-    log.debug('Input dir is: {0}'.format(input_dir))
+    log.info('Input dir is: {0}'.format(input_dir))
     log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
 
     # ==== PREPARING DATA === #
@@ -102,18 +103,13 @@ if __name__ == "__main__":
             targets = targets.permute(1,0)
             targets = targets.unsqueeze(2).to(device)
 
-            out = model(features, targets)
-            print(out.shape)
-            #sys.exit(0)
-            #n_batches += 1
-            #print(targets.shape)
 
- # loop over epochs
-      # loop over dataset names
-          # make a dataset and dataloader with batch_size=full file for each file
-            # per each batch do:
-                  # Compute loss
+            #out = model(features, targets)
+            #log.debug(out.shape)
+            sys.exit(0)
+  
         '''
+        n_batches += 1
         train_loss = criterion(out, train_targets)
         train_loss_total += train_loss.item()
 
