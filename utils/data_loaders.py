@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import Dataset, DataLoader, IterableDataset
+from torch.utils.data import Dataset, DataLoader
 from quarter_car_model_machine_learning.utils.various_utils import *
 
 # Get logger for module
@@ -76,6 +76,36 @@ class Dataset(Dataset):
 
 
 def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0):
+    '''
+    Get a list of (filename, Dataset, Dataloader) for each file in directory.
+    '''
+    '''
+    print('Finding max length')
+    glob_max_length = 0
+    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        file = load_pickle_full_path(filename)
+        acc = file.acceleration.to_numpy()
+        lengths = [len(s) for s in acc]
+        max_length = max(lengths)
+        if max_length>glob_max_length:
+            glob_max_length = max_length
+    print('Max length: ', max_length)
+    '''
+    max_length = 2001 # change this (uncomment upper part) for new data
+    data = []
+    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+
+        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
+        if batch_size=='full_dataset':
+            batch_size = dataset.n_samples
+
+        dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
+        #data.append((filename.split('/')[-1], dataset,dataloader))
+        data.append(dataset)
+
+    return data
+
+def get_concat_data(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0):
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
