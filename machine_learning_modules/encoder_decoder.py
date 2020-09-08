@@ -157,7 +157,7 @@ class lstm_seq2seq(nn.Module):
 
         batch_size = input_batch.shape[1]
 
-        # ======== Encoder ======== #
+        # ======== ENCODER ======== #
         # Initialize hidden state
         encoder_hidden = self.encoder.init_hidden(batch_size)
 
@@ -167,7 +167,7 @@ class lstm_seq2seq(nn.Module):
         self.encoder_hidden = encoder_hidden
         
 
-        # ====== Decoder ======= #
+        # ====== DDECODER ======= #
         # First decoder input: '0' (1, batch_size, 1)
         # First decoder hidden state: last encoder hidden state (batch_size, input_size)
         decoder_input = torch.zeros([1, batch_size, 1]).to(self.device)

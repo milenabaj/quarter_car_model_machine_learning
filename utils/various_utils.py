@@ -75,7 +75,30 @@ def load_pickle(input_dir, string, use_cols = None, row_min = 0, row_max = -1):
 def load_pickle_full_path(filename, use_cols = None, row_min = 0, row_max = -1):
     with open(filename, "rb") as f:
         df = pickle.load(f)
+        log_vu.info('Loading {0} rows.'.format(row_max))
         if use_cols:
             return df[use_cols].iloc[row_min:row_max]
         else:
             return df.iloc[row_min:row_max]
+      
+        
+        
+        
+            
+class Results:
+    def __init__(self):
+        self.loss_history = []
+        
+    def store_results_per_epoch(self, batch_results):
+        loss_epoch = float(batch_results.loss_total/batch_results.n_batches)
+        self.loss_history.append(loss_epoch)
+        
+class BatchResults:
+    def __init__(self):   
+        self.loss_total = 0
+        self.n_batches = 0 
+        
+        
+
+# Get logger for module
+log_vu = get_mogule_logger("various_utils")

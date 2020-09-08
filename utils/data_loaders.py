@@ -12,21 +12,54 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from quarter_car_model_machine_learning.utils.various_utils import *
 
 # Get logger for module
 dlog = get_mogule_logger("data_loaders")
 
-# get root logger by logging.getLogger() and its handler
-class Dataset(Dataset):
-    def __init__(self, filename, filetype, mode, max_length = None):
 
+def get_prepared_data(input_dir, filetype, mode, batch_size, num_workers = 0, max_length = None, nrows_to_load = -1):
+    datasets = get_datasets(input_dir, filetype, mode, num_workers = num_workers, max_length =  max_length, nrows_to_load = nrows_to_load) 
+    merged_dataset = ConcatDataset(datasets)
+    merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
+    return datasets, merged_dataloader
+   
+    
+def get_datasets(input_dir, filetype, mode, num_workers = 0, max_length = None, nrows_to_load = -1):
+    '''
+    Get a list of (filename, Dataset, Dataloader) for each file in directory.
+    '''
+    # todo: this should be separate and per all files
+    if not max_length:
+        dlog.info('Finding max length')
+        glob_max_length = 0
+        for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+            file = load_pickle_full_path(filename)
+            acc = file.acceleration.to_numpy()
+            lengths = [len(s) for s in acc]
+            max_length = max(lengths)
+            if max_length>glob_max_length:
+                glob_max_length = max_length
+    dlog.info('===> Getting datasets for filetype: {0}, max length: {1}'.format(filetype, max_length))
+
+    data = []
+    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length, nrows_to_load = nrows_to_load)
+        data.append(dataset)
+    return data
+
+
+class Dataset(Dataset):
+    def __init__(self, filename, filetype, mode, max_length = None, nrows_to_load = -1):
+        dlog.debug('=> Creating dataset for file {0}'.format(filename))
+        
         # Take input
         self.filename = filename
         self.filename_bare = filename.split('/')[-1]
         self.filetype = filetype
         self.mode = mode
+        self.nrows_to_load  = nrows_to_load
         if max_length:
             self.max_length = max_length
 
@@ -37,12 +70,13 @@ class Dataset(Dataset):
         self.n_samples = self.acc.shape[0]
 
     def load_data(self):
-        dlog.info('Loading: {0}\n'.format(self.filename))
-
-        file = load_pickle_full_path(self.filename)
+        dlog.info('Loading: {0}'.format(self.filename))
+        file = load_pickle_full_path(self.filename, row_max = self.nrows_to_load)
         self.acc = file.acceleration.to_numpy()
         if not self.max_length:
             self.get_max_length()
+            
+        # Get and pad features
         self.acc = self.pad_arrays(self.acc)
         if self.mode == 'acc-severity':
             self.severity = file.severity.to_numpy()
@@ -75,62 +109,4 @@ class Dataset(Dataset):
         return self.n_samples
 
 
-def get_datasets(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0):
-    '''
-    Get a list of (filename, Dataset, Dataloader) for each file in directory.
-    '''
-    '''
-    print('Finding max length')
-    glob_max_length = 0
-    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(filename)
-        acc = file.acceleration.to_numpy()
-        lengths = [len(s) for s in acc]
-        max_length = max(lengths)
-        if max_length>glob_max_length:
-            glob_max_length = max_length
-    print('Max length: ', max_length)
-    '''
-    max_length = 2001 # change this (uncomment upper part) for new data
-    data = []
-    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
 
-        dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
-        if batch_size=='full_dataset':
-            batch_size = dataset.n_samples
-
-        dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
-        #data.append((filename.split('/')[-1], dataset,dataloader))
-        data.append(dataset)
-
-    return data
-
-def get_concat_data(input_dir, filetype, mode, batch_size = 'full_dataset', num_workers = 0):
-    '''
-    Get a list of (filename, Dataset, Dataloader) for each file in directory.
-    '''
-    '''
-    print('Finding max length')
-    glob_max_length = 0
-    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(filename)
-        acc = file.acceleration.to_numpy()
-        lengths = [len(s) for s in acc]
-        max_length = max(lengths)
-        if max_length>glob_max_length:
-            glob_max_length = max_length
-    print('Max length: ', max_length)
-    '''
-    max_length = 2001 # change this (uncomment upper part) for new data
-    data = []
-    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-
-        dataset =  Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length)
-        if batch_size=='full_dataset':
-            batch_size = dataset.n_samples
-
-        dataloader = DataLoader(dataset, batch_size = batch_size, num_workers=num_workers)
-        #data.append((filename.split('/')[-1], dataset,dataloader))
-        data.append(dataset)
-
-    return data
