@@ -30,6 +30,7 @@ def get_datasets(input_dir, filetype, mode, num_workers = 0, max_length = None, 
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
+    dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
     # todo: this should be separate and per all files
     if not max_length:
         dlog.info('Finding max length')
@@ -41,12 +42,12 @@ def get_datasets(input_dir, filetype, mode, num_workers = 0, max_length = None, 
             max_length = max(lengths)
             if max_length>glob_max_length:
                 glob_max_length = max_length
-    dlog.info('===> Getting datasets for filetype: {0}, max length: {1}'.format(filetype, max_length))
 
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
         dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length, nrows_to_load = nrows_to_load)
         data.append(dataset)
+    dlog.info('\n')
     return data
 
 
