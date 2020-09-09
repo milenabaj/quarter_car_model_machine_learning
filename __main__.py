@@ -20,7 +20,7 @@ from torch import optim
 from torch.optim import lr_scheduler
 from utils import data_loaders
 from machine_learning_modules import encoder_decoder
-from utils import various_utils
+from utils import various_utils, plot_utils
 
 
 if __name__ == "__main__":
@@ -37,8 +37,8 @@ if __name__ == "__main__":
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
     parser.add_argument('--speed_selection_range', default = [60,80], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
-    parser.add_argument('--nrows_to_load', default = 200,
-                        help = 'Nrows to load from input (use for testing purposes). If speed selelection range is not None, the number of rows will probably be smaller.')
+    parser.add_argument('--nrows_to_load', default = 100,
+                        help = 'Nrows to load from input (use for testing purposes). If speed selelection range is not None, all rows will be used.')
     
     
     # Training and prediction
@@ -67,8 +67,10 @@ if __name__ == "__main__":
     
     # Other settings
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    save_results = True
     mode = 'acc-severity'
-    batch_size = 20 #'full_dataset'
+    model_name = 'LSTM encoder-decoder'
+    batch_size = 50 #'full_dataset'
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
@@ -101,12 +103,13 @@ if __name__ == "__main__":
                                                                            nrows_to_load = nrows_to_load)
 
     log.info('Data preparing done.\n')
-    sys.exit(0)
+
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
+        
         # Model
-        model = encoder_decoder.lstm_seq2seq(device = device, target_len = 2001)
+        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length)
         model.to(device)
     
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
@@ -194,10 +197,14 @@ if __name__ == "__main__":
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
-               
-# => TODO: select rows based on speeds
-                      
+
+# Plot results             
+plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+plotter.plot_all()
+
+
 # => TODO: define a plotter class with save option which can plot stuff in functions
+# => Find the best model using valid data
 # => TODO: export trained model to onnx
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
