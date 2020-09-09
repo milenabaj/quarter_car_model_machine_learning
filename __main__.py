@@ -35,8 +35,11 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--nrows_to_load', default = 100,
-                        help = 'Nrows to load from input (use for testing purposes).')  
+    parser.add_argument('--speed_selection_range', default = [60,80], 
+                        help = 'Select datasets for this speed only. Pass None for no selection.') 
+    parser.add_argument('--nrows_to_load', default = 200,
+                        help = 'Nrows to load from input (use for testing purposes). If speed selelection range is not None, the number of rows will probably be smaller.')
+    
     
     # Training and prediction
     parser.add_argument('--do_train', default = True,
@@ -50,10 +53,10 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
 
-
     # Parse arguments
     args = parser.parse_args()
     max_length = args.max_length
+    speed_selection_range = args.speed_selection_range 
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     if do_train_with_early_stopping: 
@@ -83,18 +86,22 @@ if __name__ == "__main__":
     log.info('Starting preparing the data.\n')
         
     if not max_length:
-         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0, nrows_to_load = nrows_to_load)
-       
+         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
+                                                          nrows_to_load = nrows_to_load)
     # Train data, # change max_length to be computed
     if do_train:
-        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', mode, batch_size, num_workers = num_workers, max_length = max_length, nrows_to_load = nrows_to_load)
+        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', mode, batch_size, num_workers = num_workers, 
+                                                                           max_length = max_length, speed_selection_range =  speed_selection_range,  
+                                                                           nrows_to_load = nrows_to_load)
 
     # Valid data
     if do_train_with_early_stopping:
-        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', mode, batch_size, num_workers = num_workers, max_length = max_length, nrows_to_load = nrows_to_load)
+        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', mode, batch_size, num_workers = num_workers, 
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range,
+                                                                           nrows_to_load = nrows_to_load)
 
     log.info('Data preparing done.\n')
-
+    sys.exit(0)
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
@@ -189,7 +196,6 @@ if __name__ == "__main__":
 
                
 # => TODO: select rows based on speeds
-# => TODO: write a function that finds the maximung length for all datasets, here just pad
                       
 # => TODO: define a plotter class with save option which can plot stuff in functions
 # => TODO: export trained model to onnx
