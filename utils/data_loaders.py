@@ -18,31 +18,36 @@ from quarter_car_model_machine_learning.utils.various_utils import *
 # Get logger for module
 dlog = get_mogule_logger("data_loaders")
 
-
+   
+def get_dataset_max_length(input_dir, filetype, num_workers = 0, nrows_to_load = -1): 
+    '''
+    Get max length of sequences in input datasets.
+    '''
+    dlog.info('===> Getting max lenght for datasets in: {0}'.format(input_dir))
+    glob_max_length = 0
+    for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        file = load_pickle_full_path(filename, row_max = nrows_to_load)
+        acc = file.acceleration.to_numpy()
+        lengths = [len(s) for s in acc]
+        max_length = max(lengths)
+        if max_length>glob_max_length:
+            glob_max_length = max_length
+    dlog.info('Max length is: {0}\n'.format(glob_max_length))
+    return glob_max_length
+  
+    
 def get_prepared_data(input_dir, filetype, mode, batch_size, num_workers = 0, max_length = None, nrows_to_load = -1):
     datasets = get_datasets(input_dir, filetype, mode, num_workers = num_workers, max_length =  max_length, nrows_to_load = nrows_to_load) 
     merged_dataset = ConcatDataset(datasets)
     merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
     return datasets, merged_dataloader
-   
-    
+
+
 def get_datasets(input_dir, filetype, mode, num_workers = 0, max_length = None, nrows_to_load = -1):
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
     dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
-    # todo: this should be separate and per all files
-    if not max_length:
-        dlog.info('Finding max length')
-        glob_max_length = 0
-        for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-            file = load_pickle_full_path(filename)
-            acc = file.acceleration.to_numpy()
-            lengths = [len(s) for s in acc]
-            max_length = max(lengths)
-            if max_length>glob_max_length:
-                glob_max_length = max_length
-
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
         dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length, nrows_to_load = nrows_to_load)

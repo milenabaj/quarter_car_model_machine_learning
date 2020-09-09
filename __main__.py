@@ -31,27 +31,37 @@ if __name__ == "__main__":
     
     # Script arguments
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
+    
+    # Data preparation
+    parser.add_argument('--max_length', default = None,
+                        help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
     parser.add_argument('--nrows_to_load', default = 100,
-                        help = 'Nrows to load from input (use for testing purposes).')
+                        help = 'Nrows to load from input (use for testing purposes).')  
+    
+    # Training and prediction
     parser.add_argument('--do_train', default = True,
-                        help = 'Use train dataset to train.')
+                        help = 'Train using the train dataset.')
     parser.add_argument('--do_train_with_early_stopping', default = True,
-                        help = 'Use train dataset to train and valid to do early stopping.')
+                        help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
+
+    # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
     parser.add_argument('--output_dir', default = 'output',
                         help='Output directory for trained models and results.')
 
+
     # Parse arguments
     args = parser.parse_args()
-    input_dir = args.input_dir
-    out_dir = args.output_dir
-    nrows_to_load = args.nrows_to_load
+    max_length = args.max_length
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     if do_train_with_early_stopping: 
         do_train=True
-        
+    nrows_to_load = args.nrows_to_load
+    input_dir = args.input_dir
+    out_dir = args.output_dir
+    
     # Other settings
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     mode = 'acc-severity'
@@ -70,18 +80,20 @@ if __name__ == "__main__":
 
     # ==== PREPARING DATA === #
     # ======================= #
-    log.info('Starting preparing the data.')
+    log.info('Starting preparing the data.\n')
         
+    if not max_length:
+         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0, nrows_to_load = nrows_to_load)
+       
     # Train data, # change max_length to be computed
     if do_train:
-        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', mode, batch_size, num_workers = num_workers, nrows_to_load = nrows_to_load)
+        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', mode, batch_size, num_workers = num_workers, max_length = max_length, nrows_to_load = nrows_to_load)
 
     # Valid data
     if do_train_with_early_stopping:
-        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', mode, batch_size, num_workers = num_workers, nrows_to_load = nrows_to_load)
+        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', mode, batch_size, num_workers = num_workers, max_length = max_length, nrows_to_load = nrows_to_load)
 
     log.info('Data preparing done.\n')
-
 
     # ==== TRAINING ==== #
     # ================== #
@@ -169,14 +181,12 @@ if __name__ == "__main__":
                 valid_results.store_results_per_epoch(valid_batch_results)
                     
             # Update LR
-            lr = scheduler.get_lr()[0]
+            lr = scheduler.get_last_lr()[0]
             if lr>0.00001:
                     scheduler.step()
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
- 
-    
-# => Compute F1 to decide on the best model  
+
                
 # => TODO: select rows based on speeds
 # => TODO: write a function that finds the maximung length for all datasets, here just pad
