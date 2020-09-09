@@ -5,6 +5,7 @@ Main script.
 """
 
 import sys,os, glob, time
+from copy import deepcopy
 import argparse
 import subprocess
 from multiprocessing import cpu_count
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     model_name = 'LSTM encoder-decoder'
     batch_size = 50 #'full_dataset'
     num_workers = 0 #0
-    n_epochs = 1
+    n_epochs = 3
     learning_rate= 0.001
     patience = 30
     
@@ -112,7 +113,7 @@ if __name__ == "__main__":
         # Model
         model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length)
         model.to(device)
-    
+        
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
     
@@ -210,6 +211,10 @@ if __name__ == "__main__":
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
+
+best_model = model.load_state_dict(early_stopping.best_state_dict)
+best_model_info = various_utils.BestModelInfo(best_epoch = early_stopping.best_epoch, best_valid_loss = early_stopping.best_valid_loss,
+                                best_train_loss = early_stopping.best_train_loss, best_model = best_model)
 
 sys.exit(0)
 # Plot results             
