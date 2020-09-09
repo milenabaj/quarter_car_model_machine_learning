@@ -74,7 +74,8 @@ if __name__ == "__main__":
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
-
+    patience = 30
+    
     # Create output directory
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -121,6 +122,9 @@ if __name__ == "__main__":
         # Store results
         train_results = various_utils.Results()
         valid_results = various_utils.Results()
+        
+        # Early_stopping 
+        early_stopping = various_utils.EarlyStopping(patience = patience)
         
         # Loop over epochs
         for epoch_index in range(0, n_epochs):
@@ -189,7 +193,16 @@ if __name__ == "__main__":
         
                 # Save valid results per this epoch
                 valid_results.store_results_per_epoch(valid_batch_results)
-                    
+                
+                # Check for early stopping
+                early_stopping.check_this_epoch(valid_loss = valid_results.loss_history[-1], train_loss = train_results.loss_history[-1], 
+                                                curr_epoch = epoch_index, state_dict = model.state_dict())  
+        
+                if early_stopping.early_stop:
+                    log.info("Early stopping")
+                    log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
+                    break
+                
             # Update LR
             lr = scheduler.get_last_lr()[0]
             if lr>0.00001:
@@ -198,13 +211,14 @@ if __name__ == "__main__":
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
 
+sys.exit(0)
 # Plot results             
 plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
 plotter.plot_all()
 
 
-# => TODO: define a plotter class with save option which can plot stuff in functions
-# => Find the best model using valid data
-# => TODO: export trained model to onnx
+# => TODO: Make a Best_Model class with info about the best model (from early stopping) and predictions on train,valid and test on 1 batch
+# => TODO: in the Best_Model, export and save the best model (maybe the predictions too) to onnx
+# => TODO: pass best model prediction to plotter and plot predicted and true time series
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
