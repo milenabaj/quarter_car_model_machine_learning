@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--speed_selection_range', default = [60,80], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
-                        help = 'Nrows to load from input (use for testing purposes). If speed selelection range is not None, all rows will be used.')
+                        help = 'Nrows to load from input (use for testing purposes). If speed selection range is not None, all rows will be used.')
     
     
     # Training and prediction
@@ -50,6 +50,9 @@ if __name__ == "__main__":
                         help = 'Train using the train dataset.')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
+    parser.add_argument('--do_test', default = True,
+                        help = 'Test on test dataset.')
+
 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
@@ -63,6 +66,7 @@ if __name__ == "__main__":
     speed_selection_range = args.speed_selection_range 
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
+    do_test = args.do_test
     nrows_to_load = args.nrows_to_load
     if do_train_with_early_stopping: 
         do_train=True
@@ -108,7 +112,7 @@ if __name__ == "__main__":
         valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
                                                                            nrows_to_load = nrows_to_load)
-
+    
     log.info('Data preparing done.\n')
 
     # ==== TRAINING ==== #
@@ -189,7 +193,6 @@ if __name__ == "__main__":
                         
                         # Get prediction
                         out = model(features, targets)
-                        
                         # Compute loss
                         valid_loss = criterion(out, targets)
                         valid_batch_results.loss_total += valid_loss.item()
@@ -239,9 +242,8 @@ plotter.plot_all()
 
 
 
- 
-# => TODO: In the Best_Model, export and save the best model (maybe the predictions too) to onnx
 # => TODO: Pass best model prediction to plotter and plot predicted and true time series
+# => TODO: Load test too and get predictions for test dataset
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
