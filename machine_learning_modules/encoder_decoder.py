@@ -196,13 +196,13 @@ class lstm_seq2seq(nn.Module):
         else:
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):
-                print('Seq2Seq forward - decoder input: ',decoder_input.shape)
-                print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
+                #print('Seq2Seq forward - decoder input: ',decoder_input.shape)
+                #print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
                 decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden)
                 outputs[t] = decoder_output
-                decoder_input = decoder_output
-                print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
-                print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
+                decoder_input = decoder_output.unsqueeze(0)
+                #print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
+                #print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
 
         return outputs
 

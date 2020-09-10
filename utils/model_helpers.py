@@ -69,15 +69,14 @@ class EarlyStopping:
     
  
 class ModelInfo:
-    def __init__(self, max_length, state_dict, early_stopping = None, print_model_info = True, model_name = ''):
-        
+    def __init__(self, model, early_stopping = None, print_model_info = True,  onnx_input = None, out_dir = '.', save = True, model_name = ''):
         # Best Model
-        self.model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length)
+        self.model = model
         self.model.to(device)
-        self.model.load_state_dict(state_dict)
-        
-        # Other info 
         self.model_name = model_name
+        self.out_dir = out_dir
+        self.onnx_input = onnx_input
+        
         if early_stopping:
             self.epoch = early_stopping.best_epoch
             self.train_loss = early_stopping.best_train_loss 
@@ -86,10 +85,24 @@ class ModelInfo:
         if print_model_info:
             self.print_model_info
             
+        if save:
+            self.save_model()
+            
     def print_model_info(self):
         from pprint import pprint
         to_print = {k:v for k,v in vars(best_model_info).items() if k!='best_model_info'}
         log_vu('Model {0}: {1}'.format(self.model_name, pprint(to_print)))
+    
+    def save_model(self):    
+        self.model.use_teacher_forcing = False
+        path = '{0}/trained_model_{1}.pt'.format(self.out_dir, self.model_name)
+        torch.save(self.model, path)
+        log_vu.info('Saved model as: {0}'.format(path))
+        
+        if self.onnx_input:
+            onnx_path = path.replace('.pt','.onnx')
+            torch.onnx.export(self.model, self.onnx_input, onnx_path, opset_version = 11)
+            log_vu.info('Saved model as: {0}'.format(onnx_path))
 
     def predict(self, dataloader, n_batches = 1, datatype = ''):
         '''
