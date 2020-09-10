@@ -79,7 +79,10 @@ if __name__ == "__main__":
     
     # Input and output directory
     input_dir = args.input_dir
-    out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
+    if speed_selection_range:
+        out_dir = '{0}_{1}_speedrange_{2}_{3}_{4}'.format(args.output_dir, model_name, speed_selection_range[0], speed_selection_range[1], device)
+    else:
+        out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -113,7 +116,7 @@ if __name__ == "__main__":
     if do_train:
         
         # Model
-        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = False)
+        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
         model.to(device)
         
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
@@ -214,7 +217,7 @@ if __name__ == "__main__":
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
 # Onnx input
-onnx_input = features[:,0,:].unsqueeze(1)
+onnx_input = (features, features) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure
 
 # Last Model
 log.debug('\n')
@@ -234,37 +237,12 @@ valid_predictions, valid_loss = best_model_info.predict(valid_dataloader, dataty
 plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
 plotter.plot_all()
 
-sys.exit(0)
 
 
-
-# Test onnx
-from onnx import onnx
-import onnxruntime
-
-onnx_path = 'output_LSTM_encoder_decoder_cpu/trained_model_LSTM_encoder_decoder.onnx'
-
-# Onnx input
-
-onnx_model = onnx.load(onnx_path)
-onnx.checker.check_model(onnx_model)
  
-ort_session = onnxruntime.InferenceSession(onnx_path)
-
-def to_numpy(tensor):
-    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-
-# compute ONNX Runtime output prediction
-ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
-ort_outs = ort_session.run(None, ort_inputs)
-
-# compare ONNX Runtime and PyTorch results
-np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
-
-print("Exported model has been tested with ONNXRuntime, and the result looks good!")
-    
 # => TODO: In the Best_Model, export and save the best model (maybe the predictions too) to onnx
 # => TODO: Pass best model prediction to plotter and plot predicted and true time series
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
+
