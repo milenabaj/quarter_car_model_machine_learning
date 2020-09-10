@@ -19,6 +19,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torch.optim import lr_scheduler
+from onnx import onnx
 from utils import data_loaders
 from machine_learning_modules import encoder_decoder
 from utils import various_utils, plot_utils, model_helpers
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     if do_train:
         
         # Model
-        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length)
+        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = False)
         model.to(device)
         
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
@@ -212,14 +213,16 @@ if __name__ == "__main__":
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
+# Onnx input
+onnx_input = features[:,0,:].unsqueeze(1)
 
 # Last Model
 log.debug('\n')
 log.debug('Last model: {0}'.format(model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
 log.debug('Last epoch: {0}\n'.format(epoch_index))
-            
+    
 # Best Model
-best_model_info = model_helpers.ModelInfo(max_length, state_dict = early_stopping.best_state_dict, early_stopping = early_stopping)
+best_model_info = model_helpers.ModelInfo(model, early_stopping = early_stopping, model_name = model_name, onnx_input = onnx_input, out_dir = out_dir)
 log.debug('Best model: {0}'.format(best_model_info.model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
 log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
@@ -231,6 +234,34 @@ valid_predictions, valid_loss = best_model_info.predict(valid_dataloader, dataty
 plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
 plotter.plot_all()
 
+sys.exit(0)
+
+
+
+# Test onnx
+from onnx import onnx
+import onnxruntime
+
+onnx_path = 'output_LSTM_encoder_decoder_cpu/trained_model_LSTM_encoder_decoder.onnx'
+
+# Onnx input
+
+onnx_model = onnx.load(onnx_path)
+onnx.checker.check_model(onnx_model)
+ 
+ort_session = onnxruntime.InferenceSession(onnx_path)
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+# compute ONNX Runtime output prediction
+ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+ort_outs = ort_session.run(None, ort_inputs)
+
+# compare ONNX Runtime and PyTorch results
+np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+
+print("Exported model has been tested with ONNXRuntime, and the result looks good!")
     
 # => TODO: In the Best_Model, export and save the best model (maybe the predictions too) to onnx
 # => TODO: Pass best model prediction to plotter and plot predicted and true time series
