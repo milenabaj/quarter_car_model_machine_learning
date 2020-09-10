@@ -227,13 +227,13 @@ log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 train_predictions, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
 valid_predictions, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
 
-sys.exit(0)
 # Plot results             
 plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
 plotter.plot_all()
 
     
-# => TODO: in the Best_Model, export and save the best model (maybe the predictions too) to onnx
-# => TODO: pass best model prediction to plotter and plot predicted and true time series
+# => TODO: In the Best_Model, export and save the best model (maybe the predictions too) to onnx
+# => TODO: Pass best model prediction to plotter and plot predicted and true time series
+
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler

@@ -48,15 +48,18 @@ class Plotter():
         self.valid_results = valid_results
         self.test_results = test_results
         self.save_plots = save_plots
-        self.out_dir = out_dir
         self.model_name = model_name
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # Output directory
+        self.out_dir = '{0}/plots'.format(out_dir)
+        if not os.path.exists(self.out_dir):
+            os.makedirs(self.out_dir)
         
     def plot_trainvalid_learning_curve(self, plot_text = ''):   
         plt.figure(figsize=(20,20))
         plt.rc('font', size=30)
-        plt.plot(self.train_results.loss_history, label='Train Loss', color = 'b',  marker='.', markersize=14, linewidth = 0.9)
-        plt.plot(self.valid_results.loss_history, label='Valid Loss', color = 'r',  marker='.', markersize=14, linewidth = 0.9)
+        plt.plot(self.train_results.loss_history, label='Train Loss', color = 'b',  marker='.', markersize=16, linewidth = 0.9)
+        plt.plot(self.valid_results.loss_history, label='Valid Loss', color = 'r',  marker='.', markersize=16, linewidth = 0.9)
         plt.title('Learning Curve: {0}'.format(self.model_name))
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
