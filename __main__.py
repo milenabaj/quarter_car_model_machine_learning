@@ -21,9 +21,11 @@ from torch import optim
 from torch.optim import lr_scheduler
 from utils import data_loaders
 from machine_learning_modules import encoder_decoder
-from utils import various_utils, plot_utils
+from utils import various_utils, plot_utils, model_helpers
 
-
+# Device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
 if __name__ == "__main__":
 
     # === SETTINGS === #
@@ -60,24 +62,23 @@ if __name__ == "__main__":
     speed_selection_range = args.speed_selection_range 
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
+    nrows_to_load = args.nrows_to_load
     if do_train_with_early_stopping: 
         do_train=True
-    nrows_to_load = args.nrows_to_load
-    input_dir = args.input_dir
-    out_dir = args.output_dir
     
     # Other settings
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     save_results = True
-    mode = 'acc-severity'
-    model_name = 'LSTM encoder-decoder'
+    acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
+    model_name = 'LSTM_encoder_decoder'
     batch_size = 50 #'full_dataset'
     num_workers = 0 #0
-    n_epochs = 3
+    n_epochs = 1
     learning_rate= 0.001
     patience = 30
     
-    # Create output directory
+    # Input and output directory
+    input_dir = args.input_dir
+    out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -94,13 +95,13 @@ if __name__ == "__main__":
                                                           nrows_to_load = nrows_to_load)
     # Train data, # change max_length to be computed
     if do_train:
-        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', mode, batch_size, num_workers = num_workers, 
+        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range,  
                                                                            nrows_to_load = nrows_to_load)
 
     # Valid data
     if do_train_with_early_stopping:
-        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', mode, batch_size, num_workers = num_workers, 
+        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
                                                                            nrows_to_load = nrows_to_load)
 
@@ -121,11 +122,11 @@ if __name__ == "__main__":
         criterion_valid = nn.MSELoss()
     
         # Store results
-        train_results = various_utils.Results()
-        valid_results = various_utils.Results()
+        train_results = model_helpers.Results()
+        valid_results = model_helpers.Results()
         
         # Early_stopping 
-        early_stopping = various_utils.EarlyStopping(patience = patience)
+        early_stopping = model_helpers.EarlyStopping(patience = patience)
         
         # Loop over epochs
         for epoch_index in range(0, n_epochs):
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     
             # Train
             log.info('=== Training..')
-            train_batch_results = various_utils.BatchResults()
+            train_batch_results = model_helpers.BatchResults()
             model.train()
             for batch_index, (features, targets) in enumerate(train_dataloader):
                 log.debug('Batch_index: {0}'.format(batch_index))
@@ -169,7 +170,7 @@ if __name__ == "__main__":
             # Validate
             if do_train_with_early_stopping:
                 log.info('=== Validating..')
-                valid_batch_results = various_utils.BatchResults()
+                valid_batch_results = model_helpers.BatchResults()
                 model.eval()
                 with torch.no_grad():
                     for batch_index, (features, targets) in enumerate(train_dataloader):
@@ -212,17 +213,26 @@ if __name__ == "__main__":
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
 
-best_model = model.load_state_dict(early_stopping.best_state_dict)
-best_model_info = various_utils.BestModelInfo(best_epoch = early_stopping.best_epoch, best_valid_loss = early_stopping.best_valid_loss,
-                                best_train_loss = early_stopping.best_train_loss, best_model = best_model)
+# Last Model
+log.debug('\n')
+log.debug('Last model: {0}'.format(model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
+log.debug('Last epoch: {0}\n'.format(epoch_index))
+            
+# Best Model
+best_model_info = model_helpers.ModelInfo(max_length, state_dict = early_stopping.best_state_dict, early_stopping = early_stopping)
+log.debug('Best model: {0}'.format(best_model_info.model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
+log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
+
+# Best Model Predictions
+train_predictions, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
+valid_predictions, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
 
 sys.exit(0)
 # Plot results             
 plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
 plotter.plot_all()
 
-
-# => TODO: Make a Best_Model class with info about the best model (from early stopping) and predictions on train,valid and test on 1 batch
+    
 # => TODO: in the Best_Model, export and save the best model (maybe the predictions too) to onnx
 # => TODO: pass best model prediction to plotter and plot predicted and true time series
 # => TODO: define predict to load the trained model and predict on test data

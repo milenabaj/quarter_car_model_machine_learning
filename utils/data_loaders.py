@@ -19,14 +19,14 @@ from quarter_car_model_machine_learning.utils.various_utils import *
 dlog = get_mogule_logger("data_loaders")
 
    
-def get_dataset_max_length(input_dir, filetype, num_workers = 0, nrows_to_load = -1): 
+def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection_range = None, nrows_to_load = -1): 
     '''
     Get max length of sequences in input datasets.
     '''
     dlog.info('===> Getting max lenght for datasets in: {0}'.format(input_dir))
     glob_max_length = 0
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(filename, row_max = nrows_to_load)
+        file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
         acc = file.acceleration.to_numpy()
         lengths = [len(s) for s in acc]
         max_length = max(lengths)
@@ -36,38 +36,38 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, nrows_to_load =
     return glob_max_length
   
     
-def get_prepared_data(input_dir, filetype, mode, batch_size, num_workers = 0, max_length = None, nrows_to_load = -1):
-    datasets = get_datasets(input_dir, filetype, mode, num_workers = num_workers, max_length =  max_length, nrows_to_load = nrows_to_load) 
+def get_prepared_data(input_dir, filetype, acc_to_severity_seq2seq, batch_size, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1):
+    datasets = get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = num_workers, max_length =  max_length,  speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load) 
     merged_dataset = ConcatDataset(datasets)
     merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
     return datasets, merged_dataloader
 
 
-def get_datasets(input_dir, filetype, mode, num_workers = 0, max_length = None, nrows_to_load = -1):
+def get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1):
     '''
     Get a list of (filename, Dataset, Dataloader) for each file in directory.
     '''
     dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        dataset = Dataset(filename=filename, filetype = filetype, mode = mode, max_length=max_length, nrows_to_load = nrows_to_load)
+        dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq, max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load)
         data.append(dataset)
     dlog.info('\n')
     return data
 
 
 class Dataset(Dataset):
-    def __init__(self, filename, filetype, mode, max_length = None, nrows_to_load = -1):
+    def __init__(self, filename, filetype, acc_to_severity_seq2seq, max_length,  speed_selection_range = None, nrows_to_load = -1):
         dlog.debug('=> Creating dataset for file {0}'.format(filename))
         
         # Take input
         self.filename = filename
         self.filename_bare = filename.split('/')[-1]
         self.filetype = filetype
-        self.mode = mode
+        self.acc_to_severity_seq2seq = acc_to_severity_seq2seq
+        self.speed_selection_range = speed_selection_range
         self.nrows_to_load  = nrows_to_load
-        if max_length:
-            self.max_length = max_length
+        self.max_length = max_length
 
         # Load features and targets
         self.load_data()
@@ -77,20 +77,16 @@ class Dataset(Dataset):
 
     def load_data(self):
         dlog.info('Loading: {0}'.format(self.filename))
-        file = load_pickle_full_path(self.filename, row_max = self.nrows_to_load)
-        self.acc = file.acceleration.to_numpy()
-        if not self.max_length:
-            self.get_max_length()
-            
+        file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load)
+        self.df = file
         # Get and pad features
+        self.acc = file.acceleration.to_numpy()
         self.acc = self.pad_arrays(self.acc)
-        if self.mode == 'acc-severity':
+        if self.acc_to_severity_seq2seq:
             self.severity = file.severity.to_numpy()
             self.severity = self.pad_arrays(self.severity)
-        elif self.mode == 'classification':
+        else:
             self.window_class = file.window_class.to_numpy() # does not need padding
-        elif self.mode == 'exploration':
-            self.file = file
         return
 
     def get_max_length(self):
@@ -105,10 +101,10 @@ class Dataset(Dataset):
 
     def __getitem__(self, index):
 
-        if self.mode == 'acc-severity':
+        if self.acc_to_severity_seq2seq:
             return self.acc[index], self.severity[index]
 
-        elif self.mode == 'classification':
+        else:
             return self.acc[index], self.window_class[index]
 
     def __len__(self):
