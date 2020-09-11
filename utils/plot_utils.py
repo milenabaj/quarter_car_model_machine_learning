@@ -130,7 +130,8 @@ class Plotter():
             ax.grid()
             
             # Text
-            text = '{0} dataset\nSpeed = {1} \frac{km}{h}'.format(dataset_type.capitalize(),speed)
+            unit= r'$\frac{km}{h}$'
+            text = '{0} dataset\nSpeed = {1}{2}'.format(dataset_type.capitalize(), speed, unit)
             ax.text(0.7,0.2, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
             #ax.scatter([], [], ' ', label='{0} dataset, speed = {')
             
@@ -152,6 +153,6 @@ class Plotter():
                 plt.savefig(figname)
                 plt.savefig(figname.replace('.png','.pdf'))
                 plt.show()
-                #plt.close('all')
+                plt.close('all')
             
         return

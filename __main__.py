@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--speed_selection_range', default = [60,80], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
-                        help = 'Nrows to load from input (use for testing purposes). If speed selection range is not None, all rows will be used.')
+                        help = 'Nrows to load from input (use for testing purposes).')
     
     
     # Training and prediction
@@ -57,9 +57,13 @@ if __name__ == "__main__":
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
-    parser.add_argument('--output_dir', default = 'output',
+    parser.add_argument('--out_dir', default = 'output',
                         help='Output directory for trained models and results.')
-
+    
+    # Run on cluster
+    parser.add_argument('--run_on_cluster', default = False,
+                        help='Run on cluster (changes input and output dir).')
+ 
     # Parse arguments
     args = parser.parse_args()
     max_length = args.max_length
@@ -72,7 +76,7 @@ if __name__ == "__main__":
         do_train=True
     
     # Other settings
-    window_size = 2 #   IMPORTAN for plotting!
+    window_size = 2 #   IMPORTANT for plotting!
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     model_name = 'LSTM_encoder_decoder'
     batch_size = 50 #'full_dataset'
@@ -83,9 +87,18 @@ if __name__ == "__main__":
     save_results = True
         
     # Input and output directory
-    input_dir = args.input_dir
+    run_on_cluster = args.run_on_cluster
+    if run_on_cluster:
+        input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows'
+        out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
+        nrows_to_load = -1
+        batch_size = 1024
+    else:
+        input_dir = args.input_dir
+        out_dir = args.out_dir
+        
     if speed_selection_range:
-        out_dir = '{0}_{1}_speedrange_{2}_{3}_{4}'.format(args.output_dir, model_name, speed_selection_range[0], speed_selection_range[1], device)
+        out_dir = '{0}_windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
     if not os.path.exists(out_dir):

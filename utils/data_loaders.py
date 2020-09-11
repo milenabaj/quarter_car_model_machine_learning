@@ -37,6 +37,7 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     dlog.info('Max length is: {0}\n'.format(glob_max_length))
     return glob_max_length
   
+    
 # Functions used for getting the data #
 # =================================== #    
 def get_prepared_data(input_dir, filetype, acc_to_severity_seq2seq, batch_size, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1):

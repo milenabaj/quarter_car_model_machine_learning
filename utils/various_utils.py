@@ -70,21 +70,6 @@ def get_main_logger(logger_name = 'Main', log_filename = 'info.log', log_level =
     return log
 
 
-def load_pickle(input_dir, string, use_cols = None, speed_selection_range = None, row_min = 0, row_max = -1):
-    filename = '{0}/{1}'.format(input_dir, string)
-    with open(filename, "rb") as f:
-        df = pickle.load(f)
-        if speed_selection_range:
-            speed_min = speed_selection_range[0]
-            speed_max = speed_selection_range[1]
-            cond = (df.speed > speed_min) & (df.speed < speed_max)
-            df = df[cond]
-            df.reset_index(inplace=True, drop=True)
-        if use_cols:
-            df =  df[use_cols].iloc[row_min:row_max]
-        else:
-            df = df.iloc[row_min:row_max]
-        return df
 
 def load_pickle_full_path(filename, use_cols = None, speed_selection_range = None, row_min = 0, row_max = -1):
     log_vu.info('Loading {0} rows. Speed selection range: {1}'.format(row_max, speed_selection_range))
