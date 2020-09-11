@@ -90,13 +90,18 @@ class Plotter():
         random.seed(123)
         examples = random.sample(range(n_samples), n_examples)
         
+        # Max length
+        padded_length = true.shape[0]
+        
         '''
         for i, example in enumerate(examples):
             pred = 100*pred[:,example,:].reshape(-1) # to cm
             true = 100*true[:,example,:].reshape(-1) # to cm
             speed = speeds[example]
+            
             # distance_padded = speed * t
             # We know the original distance (before padding) = self.window_size
+            # distance = 
         
             save_fig = False
             if i==0 or i%4==0:

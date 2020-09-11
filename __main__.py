@@ -100,8 +100,12 @@ if __name__ == "__main__":
     log.info('Starting preparing the data.\n')
         
     if not max_length:
-         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
+         max_length_train = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
                                                           nrows_to_load = nrows_to_load)
+         max_length_valid = data_loaders.get_dataset_max_length(input_dir, 'valid', num_workers = 0,  speed_selection_range =  speed_selection_range, 
+                                                          nrows_to_load = nrows_to_load)
+         max_length = np.max([max_length_train, max_length_valid])
+         
     # Train data, # change max_length to be computed
     if do_train:
         train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
@@ -153,7 +157,7 @@ if __name__ == "__main__":
             log.info('=== Training..')
             train_batch_results = model_helpers.BatchResults()
             model.train()
-            for batch_index, (features, speed, targets) in enumerate(train_dataloader):
+            for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
                 log.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
@@ -188,7 +192,7 @@ if __name__ == "__main__":
                 valid_batch_results = model_helpers.BatchResults()
                 model.eval()
                 with torch.no_grad():
-                    for batch_index, (features, speed, targets) in enumerate(train_dataloader):
+                    for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
                         log.debug('Batch_index: {0}'.format(batch_index))
             
                         # Put into the correct dimensions for LSTM
@@ -263,6 +267,8 @@ elif (not do_train_with_early_stopping and do_test):
 
 
 
+# => TODO: Get original ts length -> unpad it to that and simulate random points up to 2m, and plot pred/true on that
+    
 # => TODO: Pass best model prediction to plotter and plot predicted and true time series
 
 # => TODO: define predict to load the trained model and predict on test data

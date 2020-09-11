@@ -118,7 +118,7 @@ class ModelInfo:
         criterion = nn.MSELoss()
         self.model.eval()
         with torch.no_grad():
-            for batch_index, (features, speed, targets) in enumerate(dataloader):
+            for batch_index, (features, speed,  orig_length, targets) in enumerate(dataloader):
                 log_vu.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM

@@ -27,11 +27,13 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     glob_max_length = 0
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
         file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
-        acc = file.acceleration.to_numpy()
-        lengths = [len(s) for s in acc]
-        max_length = max(lengths)
-        if max_length>glob_max_length:
-            glob_max_length = max_length
+        
+        # This file max lenght
+        orig_lengths = file.acceleration.apply(lambda row: row.shape[0]).to_numpy(dtype='int')
+        this_file_max_length = np.max(orig_lengths)
+        
+        if this_file_max_length>glob_max_length:
+            glob_max_length = this_file_max_length
     dlog.info('Max length is: {0}\n'.format(glob_max_length))
     return glob_max_length
   
@@ -81,24 +83,22 @@ class Dataset(Dataset):
         file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load)
         self.df = file
         
-        # Get and pad features
-        self.acc = file.acceleration.to_numpy()
-        self.acc = self.pad_arrays(self.acc)
+        # Save original lengths
+        self.orig_length = self.df.acceleration.apply(lambda row: row.shape[0]).to_numpy(dtype='int')
+        
+        # Get and pad inputs
+        self.acc = self.pad_arrays(file.acceleration)
         self.speed = file.speed.to_numpy(dtype='float32')
+        
+        # Get and pad targets
         if self.acc_to_severity_seq2seq:
-            self.severity = file.severity.to_numpy()
-            self.severity = self.pad_arrays(self.severity)
+            self.severity = self.pad_arrays(file.severity)
         else:
             self.window_class = file.window_class.to_numpy() # does not need padding
         return
 
-    def get_max_length(self):
-        lengths = [len(s) for s in self.acc]
-        self.max_length = max(lengths)
-        self.max_length_index = lengths.index(self.max_length )
-        return
-
     def pad_arrays(self, arrays):
+        arrays = arrays.to_numpy()
         padded_list = [ np.pad(arr,  (0,(self.max_length-arr.shape[0])),  mode='constant') for arr in arrays ] # padded at the end of each array
         return np.array(padded_list, dtype=np.float32)
         # padding helps classification, as it stores signal lenght (like velocity)
@@ -106,10 +106,10 @@ class Dataset(Dataset):
     def __getitem__(self, index):
 
         if self.acc_to_severity_seq2seq:
-            return self.acc[index], self.speed[index], self.severity[index]
+            return self.acc[index], self.speed[index], self.orig_length[index], self.severity[index]
 
         else:
-            return self.acc[index], self.speed[index], self.window_class[index]
+            return self.acc[index], self.speed[index], self.orig_length[index], self.window_class[index]
 
     def __len__(self):
         return self.n_samples
