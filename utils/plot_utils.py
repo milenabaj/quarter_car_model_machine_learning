@@ -119,8 +119,8 @@ class Plotter():
                     save_fig = True
         
             # Plot
-            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=45, marker='*', alpha=0.5)
-            ax.scatter(distance, true, c = 'red', label = 'True', s=45, marker='o', alpha=0.5)
+            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=45, marker='*', alpha=0.8)
+            ax.scatter(distance, true, c = 'red', label = 'True', s=45, marker='o', alpha=0.8)
             #fig.set_title(dataset_type)
             ax.set_ylabel('Severity [cm]')
             ax.set_xlabel('Distance [m]')
