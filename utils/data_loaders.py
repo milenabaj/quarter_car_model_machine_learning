@@ -13,6 +13,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
+sys.path.append(os.getcwd()) 
+sys.path.append(os.getenv("HOME"))
+sys.path.append('/home/mibaj/') 
+   
 from quarter_car_model_machine_learning.utils.various_utils import *
 
 # Get logger for module
