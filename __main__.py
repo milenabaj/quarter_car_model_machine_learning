@@ -26,7 +26,10 @@ from utils import various_utils, plot_utils, model_helpers
 
 # Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
+# Path
+sys.path.append(os.getcwd())    
+
 if __name__ == "__main__":
 
     # === SETTINGS === #
