@@ -35,7 +35,8 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     dlog.info('Max length is: {0}\n'.format(glob_max_length))
     return glob_max_length
   
-    
+# Functions used for getting the data #
+# =================================== #    
 def get_prepared_data(input_dir, filetype, acc_to_severity_seq2seq, batch_size, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1):
     datasets = get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = num_workers, max_length =  max_length,  speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load) 
     merged_dataset = ConcatDataset(datasets)
@@ -79,9 +80,11 @@ class Dataset(Dataset):
         dlog.info('Loading: {0}'.format(self.filename))
         file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load)
         self.df = file
+        
         # Get and pad features
         self.acc = file.acceleration.to_numpy()
         self.acc = self.pad_arrays(self.acc)
+        self.speed = file.speed.to_numpy(dtype='float32')
         if self.acc_to_severity_seq2seq:
             self.severity = file.severity.to_numpy()
             self.severity = self.pad_arrays(self.severity)
@@ -96,19 +99,20 @@ class Dataset(Dataset):
         return
 
     def pad_arrays(self, arrays):
-        padded_list = [ np.pad(arr,  (0,(self.max_length-arr.shape[0])),  mode='constant') for arr in arrays ]
+        padded_list = [ np.pad(arr,  (0,(self.max_length-arr.shape[0])),  mode='constant') for arr in arrays ] # padded at the end of each array
         return np.array(padded_list, dtype=np.float32)
+        # padding helps classification, as it stores signal lenght (like velocity)
 
     def __getitem__(self, index):
 
         if self.acc_to_severity_seq2seq:
-            return self.acc[index], self.severity[index]
+            return self.acc[index], self.speed, self.severity[index]
 
         else:
-            return self.acc[index], self.window_class[index]
+            return self.acc[index], self.speed, self.window_class[index]
 
     def __len__(self):
         return self.n_samples
 
-
+# =================================== # 
 

@@ -113,11 +113,12 @@ class ModelInfo:
         losses = []
         predicted_targets = [] 
         true_targets = []
+        speeds = []
         
         criterion = nn.MSELoss()
         self.model.eval()
         with torch.no_grad():
-            for batch_index, (features, targets) in enumerate(dataloader):
+            for batch_index, (features, speed, targets) in enumerate(dataloader):
                 log_vu.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
@@ -127,6 +128,9 @@ class ModelInfo:
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
                 true_targets.append(targets.cpu().detach().numpy())
+                
+                # Save speeds
+                speeds.append(speed)
                 
                 # Get prediction
                 out = self.model(features, targets)
@@ -141,4 +145,4 @@ class ModelInfo:
                     break
                 
         mean_loss = mean(losses)
-        return true_targets, predicted_targets, mean_loss
+        return true_targets, predicted_targets, speeds, mean_loss

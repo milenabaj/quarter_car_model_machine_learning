@@ -72,6 +72,7 @@ if __name__ == "__main__":
         do_train=True
     
     # Other settings
+    window_size = 2 # important for plotting!
     save_results = True
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     model_name = 'LSTM_encoder_decoder'
@@ -152,7 +153,7 @@ if __name__ == "__main__":
             log.info('=== Training..')
             train_batch_results = model_helpers.BatchResults()
             model.train()
-            for batch_index, (features, targets) in enumerate(train_dataloader):
+            for batch_index, (features, speed, targets) in enumerate(train_dataloader):
                 log.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
@@ -187,7 +188,7 @@ if __name__ == "__main__":
                 valid_batch_results = model_helpers.BatchResults()
                 model.eval()
                 with torch.no_grad():
-                    for batch_index, (features, targets) in enumerate(train_dataloader):
+                    for batch_index, (features, speed, targets) in enumerate(train_dataloader):
                         log.debug('Batch_index: {0}'.format(batch_index))
             
                         # Put into the correct dimensions for LSTM
@@ -240,23 +241,23 @@ log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
 # Best Model Predictions
 if do_train:
-    train_true, train_pred, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
+    train_true, train_pred, train_speeds, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
 if do_train_with_early_stopping:
-    valid_true, valid_pred, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
+    valid_true, valid_pred, valid_speeds, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
 if do_test:
-    test_true, test_pred, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
+    test_true, test_pred, test_speeds, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
 
 # Plot results 
 if (do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'), (test_true, test_pred, 'test'))       
 
 elif (do_train_with_early_stopping and not do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'))    
     
 elif (not do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_pred_vs_true_timeseries((test_true, test_pred, 'test'))
 
 

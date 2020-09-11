@@ -41,14 +41,16 @@ def plot_learning_curve(x, y, y_label = 'Loss', model_name = '', plotname_suffix
 
 
 class Plotter():
-    def __init__(self, train_results = None, valid_results = None, test_results = None, model_name = '',
-                 save_plots = False,  out_dir = '.'):
+    def __init__(self, train_results = None, valid_results = None, test_results = None, window_size = None,
+                 model_name = '', speed_selection = None, save_plots = False,  out_dir = '.'):
         plog.info('===>\nCreating plotter')
         self.train_results = train_results 
         self.valid_results = valid_results
+        self.window_size = window_size
         self.test_results = test_results
         self.save_plots = save_plots
         self.model_name = model_name
+        self.speed_selection = speed_selection
         
         # Output directory
         self.out_dir = '{0}/plots'.format(out_dir)
@@ -74,22 +76,27 @@ class Plotter():
         plt.show()
         return
 
-    def plot_pred_vs_true_timeseries(self, true, pred, dataset_type, plot_text = ''):
+    def plot_pred_vs_true_timeseries(self, true, pred, dataset_type, batch_index_to_plot = 0,  n_examples = 6):
+        import random
         plog.debug('Plotting predicted vs true timeseries plot for {0} dataset.'.format(dataset_type))
-        return
-        '''
-        # Samples to plot
-        n_samples = out.cpu().detach().numpy().shape[1]
-        random.seed(123)
-        examples = random.sample(range(n_samples), n_plots)
         
+        # Plot batch = batch_index_to_plot
+        true = true[batch_index_to_plot]
+        pred = pred[batch_index_to_plot]
+
+        # Samples to plot
+        n_samples = true.shape[1] # batch size
+        random.seed(123)
+        examples = random.sample(range(n_samples), n_examples)
+        
+        '''
         for i, example in enumerate(examples):
-            pred = 100*pred[:,example,:].reshape(-1)
-            true = 100*true[:,example,:].reshape(-1)
+            pred = 100*pred[:,example,:].reshape(-1) # to cm
+            true = 100*true[:,example,:].reshape(-1) # to cm
         
             save_fig = False
             if i==0 or i%4==0:
-                fig, axis = plt.subplots(2, 2, figsize = (20,20))
+                fig, axis = plt.subplots(2, 2, figsize = (40,40))
                 ax = axis[0,0]
                 fig_i = int(i/4)
             else:
@@ -104,7 +111,7 @@ class Plotter():
         
             ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=18, marker='*', alpha=0.5)
             ax.scatter(distance, true, c = 'red', label = 'True', s=30, marker='o', alpha=0.5)
-            #ax.set_title('Severity')
+            ax.set_title(dataset_type)
             ax.set_ylabel('Severity [cm]')
             ax.set_xlabel('Distance [m]')
             #ax.set_ylim(( ax.get_ylim()[0]-1, ax.get_ylim()[1]+1 ))
@@ -114,7 +121,10 @@ class Plotter():
             ax.yaxis.set_minor_locator(MultipleLocator(2))
         
             if save_fig:
-                plt.savefig('{0}/{1}_figure{2}_{3}.png'.format(out_dir, 'severity', fig_i, plot_string))
+                plt.savefig('{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.png'.format(self.out_dir, dataset_type, self.model_name, 
+                                                                                         self.speed_selection[0], self.speed_selection[1], fig_i))
+                plt.savefig('{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.pdf'.format(self.out_dir, dataset_type, self.model_name, 
+                                                                                         self.speed_selection[0], self.speed_selection[1], fig_i))
                 plt.close('all')
             '''
             
