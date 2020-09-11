@@ -94,6 +94,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 1024
         do_test = True
+        n_epochs = 300
         # plus change n_examples in the Plotter
     else:
         input_dir = args.input_dir

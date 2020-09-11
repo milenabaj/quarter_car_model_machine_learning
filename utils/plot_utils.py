@@ -133,7 +133,7 @@ class Plotter():
             unit= r'$\frac{km}{h}$'
             dataset_type = dataset_type.capitalize()
             text = '{0} dataset\nspeed = {1}{2}'.format(dataset_type, speed, unit)
-            ax.text(0.7,0.1, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
+            ax.text(0.7,0.15, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
             #ax.scatter([], [], ' ', label='{0} dataset, speed = {')
             
             ax.legend(fontsize=45,  loc='lower left', prop={'size': 50})
