@@ -78,7 +78,7 @@ class Plotter():
         plt.show()
         return
 
-    def plot_pred_vs_true_timeseries(self, true_batch, pred_batch, speeds, orig_lengths, dataset_type, batch_index_to_plot = 0,  n_examples = 6):
+    def plot_pred_vs_true_timeseries(self, true_batch, pred_batch, speeds, orig_lengths, dataset_type, batch_index_to_plot = 0,  n_examples = 100):
         import random
         plog.debug('Plotting predicted vs true timeseries plot for {0} dataset.'.format(dataset_type))
         plt.rc('font', size=50)
@@ -119,8 +119,8 @@ class Plotter():
                     save_fig = True
         
             # Plot
-            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=45, marker='*', alpha=0.8)
-            ax.scatter(distance, true, c = 'red', label = 'True', s=45, marker='o', alpha=0.8)
+            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=50, marker='*', alpha=0.9)
+            ax.scatter(distance, true, c = 'red', label = 'True', s=50, marker='o', alpha=0.9)
             #fig.set_title(dataset_type)
             ax.set_ylabel('Severity [cm]')
             ax.set_xlabel('Distance [m]')
@@ -133,7 +133,7 @@ class Plotter():
             unit= r'$\frac{km}{h}$'
             dataset_type = dataset_type.capitalize()
             text = '{0} dataset\nspeed = {1}{2}'.format(dataset_type, speed, unit)
-            ax.text(0.7,0.2, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
+            ax.text(0.7,0.1, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
             #ax.scatter([], [], ' ', label='{0} dataset, speed = {')
             
             ax.legend(fontsize=45,  loc='lower left', prop={'size': 50})

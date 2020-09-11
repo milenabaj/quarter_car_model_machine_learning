@@ -208,7 +208,7 @@ if __name__ == "__main__":
                 model.eval()
                 with torch.no_grad():
                     for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
-                        log.debug('Batch_index: {0}'.format(batch_index))
+                        #log.debug('Batch_index: {0}'.format(batch_index))
             
                         # Put into the correct dimensions for LSTM
                         features = features.permute(1,0)
