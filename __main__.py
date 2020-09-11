@@ -250,15 +250,15 @@ if do_test:
 # Plot results 
 if (do_train_with_early_stopping and do_test):
     plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
-    plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'), (test_true, test_pred, 'test'))       
+    plotter.plot_all((train_true, train_pred, train_speeds, 'train'), (valid_true, valid_pred, valid_speeds,' valid'), (test_true, test_pred, test_speeds, 'test'))       
 
 elif (do_train_with_early_stopping and not do_test):
     plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
-    plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'))    
+    plotter.plot_all((train_true, train_pred, train_speeds, 'train'), (valid_true, valid_pred, valid_speeds,'valid'))    
     
 elif (not do_train_with_early_stopping and do_test):
     plotter = plot_utils.Plotter(window_size = window_size, save_plots = save_results, model_name = model_name, out_dir = out_dir)
-    plotter.plot_pred_vs_true_timeseries((test_true, test_pred, 'test'))
+    plotter.plot_pred_vs_true_timeseries((test_true, test_pred, test_speeds, 'test'))
 
 
 

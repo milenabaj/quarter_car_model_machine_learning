@@ -76,13 +76,14 @@ class Plotter():
         plt.show()
         return
 
-    def plot_pred_vs_true_timeseries(self, true, pred, dataset_type, batch_index_to_plot = 0,  n_examples = 6):
+    def plot_pred_vs_true_timeseries(self, true, pred, speeds, dataset_type, batch_index_to_plot = 0,  n_examples = 6):
         import random
         plog.debug('Plotting predicted vs true timeseries plot for {0} dataset.'.format(dataset_type))
         
         # Plot batch = batch_index_to_plot
         true = true[batch_index_to_plot]
         pred = pred[batch_index_to_plot]
+        speeds = speeds[batch_index_to_plot]
 
         # Samples to plot
         n_samples = true.shape[1] # batch size
@@ -93,6 +94,9 @@ class Plotter():
         for i, example in enumerate(examples):
             pred = 100*pred[:,example,:].reshape(-1) # to cm
             true = 100*true[:,example,:].reshape(-1) # to cm
+            speed = speeds[example]
+            # distance_padded = speed * t
+            # We know the original distance (before padding) = self.window_size
         
             save_fig = False
             if i==0 or i%4==0:
@@ -126,7 +130,7 @@ class Plotter():
                 plt.savefig('{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.pdf'.format(self.out_dir, dataset_type, self.model_name, 
                                                                                          self.speed_selection[0], self.speed_selection[1], fig_i))
                 plt.close('all')
-            '''
+           ''' 
             
     def plot_all(self, *l):
         # l is a varible size tuple: ((true1, pred1, dataset_type), (true2,pred2, dataset_type)..)
@@ -135,5 +139,5 @@ class Plotter():
         self.plot_trainvalid_learning_curve(train_loss = self.train_results.loss_history, valid_loss = self.valid_results.loss_history)
         
         # Plot true vs pred
-        for (true, pred, dataset_type) in l:
-            self.plot_pred_vs_true_timeseries(true, pred, dataset_type)
+        for (true, pred, speeds, dataset_type) in l:
+            self.plot_pred_vs_true_timeseries(true, pred, speeds, dataset_type)

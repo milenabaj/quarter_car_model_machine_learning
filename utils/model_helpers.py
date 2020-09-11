@@ -130,7 +130,7 @@ class ModelInfo:
                 true_targets.append(targets.cpu().detach().numpy())
                 
                 # Save speeds
-                speeds.append(speed)
+                speeds.append(speed.cpu().detach().numpy())
                 
                 # Get prediction
                 out = self.model(features, targets)
