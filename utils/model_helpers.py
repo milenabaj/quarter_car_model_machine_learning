@@ -110,16 +110,18 @@ class ModelInfo:
         '''
         from statistics import mean
         log_vu.info('\n===> Predicting {0}'.format(datatype))
+        
         losses = []
         predicted_targets = [] 
         true_targets = []
         speeds = []
+        orig_lengths = []
         
         criterion = nn.MSELoss()
         self.model.eval()
         with torch.no_grad():
             for batch_index, (features, speed,  orig_length, targets) in enumerate(dataloader):
-                log_vu.debug('Batch_index: {0}'.format(batch_index))
+                #log_vu.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
                 features = features.permute(1,0)
@@ -129,8 +131,9 @@ class ModelInfo:
                 targets = targets.unsqueeze(2).to(device)
                 true_targets.append(targets.cpu().detach().numpy())
                 
-                # Save speeds
+                # Save speeds and original lengths
                 speeds.append(speed.cpu().detach().numpy())
+                orig_lengths.append(orig_length.cpu().detach().numpy())
                 
                 # Get prediction
                 out = self.model(features, targets)
@@ -141,8 +144,8 @@ class ModelInfo:
                 losses.append(loss.item())
                 
                 # Update n_batches
-                if batch_index == n_batches-1: #batch_index starts at 0
+                if batch_index == n_batches-1: # batch_index starts at 0
                     break
                 
         mean_loss = mean(losses)
-        return true_targets, predicted_targets, speeds, mean_loss
+        return true_targets, predicted_targets, speeds, orig_lengths, mean_loss
