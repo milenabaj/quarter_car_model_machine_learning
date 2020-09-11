@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [60,80], 
+    parser.add_argument('--speed_selection_range', default = [40,80], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')

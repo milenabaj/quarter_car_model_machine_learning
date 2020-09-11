@@ -63,8 +63,8 @@ class Plotter():
         valid_loss = self.valid_results.loss_history
         plt.figure(figsize=(50,50))
         plt.rc('font', size=30)
-        plt.plot(train_loss, label='Train Loss', color = 'b',  marker='.', markersize=40, linewidth = 0.9)
-        plt.plot(valid_loss, label='Valid Loss', color = 'r',  marker='.', markersize=40, linewidth = 0.9)
+        plt.plot(train_loss, label='Train Loss', color = 'b',  marker='.', markersize=35, linewidth = 0.9)
+        plt.plot(valid_loss, label='Valid Loss', color = 'r',  marker='.', markersize=35, linewidth = 0.9)
         plt.title('Learning Curve: {0}'.format(self.model_name))
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
@@ -119,8 +119,8 @@ class Plotter():
                     save_fig = True
         
             # Plot
-            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=45, marker='*', alpha=0.7)
-            ax.scatter(distance, true, c = 'red', label = 'True', s=45, marker='o', alpha=0.7)
+            ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=45, marker='*', alpha=0.5)
+            ax.scatter(distance, true, c = 'red', label = 'True', s=45, marker='o', alpha=0.5)
             #fig.set_title(dataset_type)
             ax.set_ylabel('Severity [cm]')
             ax.set_xlabel('Distance [m]')
