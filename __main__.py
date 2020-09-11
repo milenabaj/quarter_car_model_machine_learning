@@ -26,13 +26,15 @@ from utils import various_utils, plot_utils, model_helpers
 
 # Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+sys.path.append(os.getcwd()) 
+sys.path.append(os.getenv("HOME"))
+sys.path.append('/home/mibaj/') 
+   
 if __name__ == "__main__":
 
     # === SETTINGS === #
     # ================ #
-    sys.path.append(os.getcwd()) 
-    sys.path.append(os.getenv("HOME"))
+
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip() 
     
     # Script arguments
