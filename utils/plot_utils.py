@@ -63,14 +63,14 @@ class Plotter():
         valid_loss = self.valid_results.loss_history
         plt.figure(figsize=(50,50))
         plt.rc('font', size=30)
-        plt.plot(train_loss, label='Train Loss', color = 'b',  marker='.', markersize=16, linewidth = 0.9)
-        plt.plot(valid_loss, label='Valid Loss', color = 'r',  marker='.', markersize=16, linewidth = 0.9)
+        plt.plot(train_loss, label='Train Loss', color = 'b',  marker='.', markersize=40, linewidth = 0.9)
+        plt.plot(valid_loss, label='Valid Loss', color = 'r',  marker='.', markersize=40, linewidth = 0.9)
         plt.title('Learning Curve: {0}'.format(self.model_name))
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         #plt.xlim([0., plt.xlim()[1]])
         plt.ylim([0, plt.ylim()[1]*1.2])
-        plt.text(0.1, 0.1, plot_text, horizontalalignment='left', verticalalignment='center', transform=plt.gca().transAxes)
+        plt.text(0.1, 0.7, plot_text, horizontalalignment='left', verticalalignment='center', transform=plt.gca().transAxes)
         plt.legend()
         plot_name = self.model_name + '_learning_curve'
         plt.savefig('{0}/{1}.png'.format(self.out_dir, plot_name))
@@ -131,7 +131,8 @@ class Plotter():
             
             # Text
             unit= r'$\frac{km}{h}$'
-            text = '{0} dataset\nSpeed = {1}{2}'.format(dataset_type.capitalize(), speed, unit)
+            dataset_type = dataset_type.capitalize()
+            text = '{0} dataset\nspeed = {1}{2}'.format(dataset_type, speed, unit)
             ax.text(0.7,0.2, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
             #ax.scatter([], [], ' ', label='{0} dataset, speed = {')
             

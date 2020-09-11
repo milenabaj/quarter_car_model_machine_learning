@@ -50,7 +50,7 @@ if __name__ == "__main__":
                         help = 'Train using the train dataset.')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
-    parser.add_argument('--do_test', default = False,
+    parser.add_argument('--do_test', default = True,
                         help = 'Test on test dataset.')
 
 
@@ -93,6 +93,8 @@ if __name__ == "__main__":
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
         batch_size = 1024
+        do_test = True
+        # plus change n_examples in the Plotter
     else:
         input_dir = args.input_dir
         out_dir = args.out_dir
@@ -171,7 +173,7 @@ if __name__ == "__main__":
             train_batch_results = model_helpers.BatchResults()
             model.train()
             for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
-                log.debug('Batch_index: {0}'.format(batch_index))
+                #log.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
                 features = features.permute(1,0)
