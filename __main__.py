@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # === SETTINGS === #
     # ================ #
     sys.path.append(os.getcwd()) 
-    sys.path.appendos.getenv("HOME"))
+    sys.path.append(os.getenv("HOME"))
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip() 
     
     # Script arguments
