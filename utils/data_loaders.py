@@ -106,10 +106,10 @@ class Dataset(Dataset):
     def __getitem__(self, index):
 
         if self.acc_to_severity_seq2seq:
-            return self.acc[index], self.speed, self.severity[index]
+            return self.acc[index], self.speed[index], self.severity[index]
 
         else:
-            return self.acc[index], self.speed, self.window_class[index]
+            return self.acc[index], self.speed[index], self.window_class[index]
 
     def __len__(self):
         return self.n_samples
