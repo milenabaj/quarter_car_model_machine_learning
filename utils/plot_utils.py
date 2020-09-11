@@ -55,11 +55,12 @@ class Plotter():
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
         
-    def plot_trainvalid_learning_curve(self, plot_text = ''):   
+    def plot_trainvalid_learning_curve(self, train_loss, valid_loss, plot_text = ''):   
+        plog.debug('Plotting Learning Curve')
         plt.figure(figsize=(20,20))
         plt.rc('font', size=30)
-        plt.plot(self.train_results.loss_history, label='Train Loss', color = 'b',  marker='.', markersize=16, linewidth = 0.9)
-        plt.plot(self.valid_results.loss_history, label='Valid Loss', color = 'r',  marker='.', markersize=16, linewidth = 0.9)
+        plt.plot(train_loss, label='Train Loss', color = 'b',  marker='.', markersize=16, linewidth = 0.9)
+        plt.plot(valid_loss, label='Valid Loss', color = 'r',  marker='.', markersize=16, linewidth = 0.9)
         plt.title('Learning Curve: {0}'.format(self.model_name))
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
@@ -72,17 +73,19 @@ class Plotter():
         plt.savefig('{0}/{1}.pdf'.format(self.out_dir, plot_name))
         plt.show()
         return
-    '''
-    def plot_predicted_vs_true_severity(self, plot_text = ''):
-        
+
+    def plot_pred_vs_true_timeseries(self, true, pred, dataset_type, plot_text = ''):
+        plog.debug('Plotting predicted vs true timeseries plot for {0} dataset.'.format(dataset_type))
+        return
+        '''
         # Samples to plot
         n_samples = out.cpu().detach().numpy().shape[1]
         random.seed(123)
         examples = random.sample(range(n_samples), n_plots)
         
         for i, example in enumerate(examples):
-            pred = 100*out.cpu().detach().numpy()[:,example,:].reshape(-1)
-            true = 100*train_targets.cpu().detach().numpy()[:,example,:].reshape(-1)
+            pred = 100*pred[:,example,:].reshape(-1)
+            true = 100*true[:,example,:].reshape(-1)
         
             save_fig = False
             if i==0 or i%4==0:
@@ -113,6 +116,14 @@ class Plotter():
             if save_fig:
                 plt.savefig('{0}/{1}_figure{2}_{3}.png'.format(out_dir, 'severity', fig_i, plot_string))
                 plt.close('all')
-                '''
-    def plot_all(self):
-        self.plot_trainvalid_learning_curve()
+            '''
+            
+    def plot_all(self, *l):
+        # l is a varible size tuple: ((true1, pred1, dataset_type), (true2,pred2, dataset_type)..)
+        
+        # Plot Learning Curve
+        self.plot_trainvalid_learning_curve(train_loss = self.train_results.loss_history, valid_loss = self.valid_results.loss_history)
+        
+        # Plot true vs pred
+        for (true, pred, dataset_type) in l:
+            self.plot_pred_vs_true_timeseries(true, pred, dataset_type)

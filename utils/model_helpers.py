@@ -104,14 +104,15 @@ class ModelInfo:
             torch.onnx.export(self.model, self.onnx_input, onnx_path, opset_version = 11)
             log_vu.info('Saved model as: {0}'.format(onnx_path))
 
-    def predict(self, dataloader, n_batches = 1, datatype = ''):
+    def predict(self, dataloader, n_batches = -1, datatype = ''):
         '''
         Get model predictions on n_batches of the dataloader.
         '''
         from statistics import mean
         log_vu.info('\n===> Predicting {0}'.format(datatype))
         losses = []
-        predictions = [] 
+        predicted_targets = [] 
+        true_targets = []
         
         criterion = nn.MSELoss()
         self.model.eval()
@@ -125,10 +126,11 @@ class ModelInfo:
     
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
+                true_targets.append(targets.cpu().detach().numpy())
                 
                 # Get prediction
                 out = self.model(features, targets)
-                predictions.append(out)
+                predicted_targets.append(out.cpu().detach().numpy())
                 
                 # Compute loss
                 loss = criterion(out, targets)
@@ -139,4 +141,4 @@ class ModelInfo:
                     break
                 
         mean_loss = mean(losses)
-        return predictions, mean_loss
+        return true_targets, predicted_targets, mean_loss

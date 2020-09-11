@@ -50,7 +50,7 @@ if __name__ == "__main__":
                         help = 'Train using the train dataset.')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
-    parser.add_argument('--do_test', default = True,
+    parser.add_argument('--do_test', default = False,
                         help = 'Test on test dataset.')
 
 
@@ -110,6 +110,12 @@ if __name__ == "__main__":
     # Valid data
     if do_train_with_early_stopping:
         valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range,
+                                                                           nrows_to_load = nrows_to_load)
+        
+    # Test data
+    if do_test:
+        test_datasets, test_dataloader =  data_loaders.get_prepared_data(input_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
                                                                            nrows_to_load = nrows_to_load)
     
@@ -233,17 +239,30 @@ log.debug('Best model: {0}'.format(best_model_info.model.state_dict()['encoder.l
 log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
 # Best Model Predictions
-train_predictions, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
-valid_predictions, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
+if do_train:
+    train_true, train_pred, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
+if do_train_with_early_stopping:
+    valid_true, valid_pred, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
+if do_test:
+    test_true, test_pred, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
 
-# Plot results             
-plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
-plotter.plot_all()
+# Plot results 
+if (do_train_with_early_stopping and do_test):
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'), (test_true, test_pred, 'test'))       
+
+elif (do_train_with_early_stopping and not do_test):
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter.plot_all((train_true, train_pred, 'train'), (valid_true, valid_pred, 'valid'))    
+    
+elif (not do_train_with_early_stopping and do_test):
+    plotter = plot_utils.Plotter(save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter.plot_pred_vs_true_timeseries((test_true, test_pred, 'test'))
+
 
 
 
 # => TODO: Pass best model prediction to plotter and plot predicted and true time series
-# => TODO: Load test too and get predictions for test dataset
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
