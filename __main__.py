@@ -155,7 +155,7 @@ if __name__ == "__main__":
         model.to(device)
         
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
     
         criterion = nn.MSELoss()
         criterion_valid = nn.MSELoss()
@@ -244,7 +244,7 @@ if __name__ == "__main__":
                     break
                 
             # Update LR
-            lr = scheduler.get_last_lr()[0]
+            lr = scheduler.get_lr()[0]
             if lr>0.00001:
                     scheduler.step()
                     
