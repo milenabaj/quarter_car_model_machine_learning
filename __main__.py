@@ -34,7 +34,6 @@ if __name__ == "__main__":
 
     # === SETTINGS === #
     # ================ #
-
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip() 
     
     # Script arguments
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [40,80], 
+    parser.add_argument('--speed_selection_range', default = [40,45], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -86,7 +85,7 @@ if __name__ == "__main__":
     batch_size = 50 #'full_dataset'
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.001
+    learning_rate= 0.01
     patience = 30
     save_results = True
         
@@ -96,9 +95,9 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows'
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
-        batch_size = 1024
+        batch_size = 4096
         do_test = True
-        n_epochs = 300
+        n_epochs = 200
         # plus change n_examples in the Plotter
     else:
         input_dir = args.input_dir
@@ -224,6 +223,7 @@ if __name__ == "__main__":
                         
                         # Get prediction
                         out = model(features, targets)
+                        
                         # Compute loss
                         valid_loss = criterion(out, targets)
                         valid_batch_results.loss_total += valid_loss.item()
@@ -258,7 +258,7 @@ log.debug('\n')
 log.debug('Last model: {0}'.format(model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
 log.debug('Last epoch: {0}\n'.format(epoch_index))
     
-# Best Model
+# Best Model (saved as .pth and .onnx)
 best_model_info = model_helpers.ModelInfo(model, early_stopping = early_stopping, model_name = model_name, onnx_input = onnx_input, out_dir = out_dir)
 log.debug('Best model: {0}'.format(best_model_info.model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
 log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))

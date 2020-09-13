@@ -132,7 +132,7 @@ class Plotter():
             # Text
             unit= r'$\frac{km}{h}$'
             dataset_type = dataset_type.capitalize()
-            text = '{0} dataset\nspeed = {1}{2}'.format(dataset_type, speed, unit)
+            text = '{0} dataset\nSpeed = {1}{2}'.format(dataset_type, speed, unit)
             ax.text(0.7,0.15, text, fontsize=35, horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
             #ax.scatter([], [], ' ', label='{0} dataset, speed = {')
             
@@ -146,7 +146,7 @@ class Plotter():
             # Save
             if save_fig:
                 if self.speed_selection:
-                    figname = '{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.png'.format(self.out_dir, dataset_type, self.model_name,
+                    figname = '{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.png'.format(self.out_dir, dataset_type.lower(), self.model_name,
                                                                                            self.speed_selection[0], self.speed_selection[1], fig_i)
                 else:
                     figname = '{0}/{1}_{2}_fullspeed_severity_figure{3}.png'.format(self.out_dir, dataset_type, self.model_name, fig_i)
