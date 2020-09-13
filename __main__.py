@@ -85,7 +85,7 @@ if __name__ == "__main__":
     batch_size = 50 #'full_dataset'
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.01
+    learning_rate= 0.001
     patience = 30
     save_results = True
         
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 4096
         do_test = True
-        n_epochs = 200
+        n_epochs = 120
         # plus change n_examples in the Plotter
     else:
         input_dir = args.input_dir
