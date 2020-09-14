@@ -166,8 +166,10 @@ if __name__ == "__main__":
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
     parser.add_argument('--filetype', default = 'train',
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
+    parser.add_argument('--window-size', default = '10',
+                        help = 'Window size.')
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized'.format(git_repo_path),
-                        help = 'Input directory containing single-defect .mat files.')
+                        help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '{0}/data/Golden-car-simulation-August-2020'.format(git_repo_path),
                         help='Directory base where a new directory with output files will be created.')
 
@@ -177,15 +179,16 @@ if __name__ == "__main__":
     output_dir_base = args.output_dir_base
     is_test = args.test
     filetype = args.filetype
+    window_size = args.window_size
 
     # Make output directory
-    out_dir = '{0}/train-val-test-normalized-split-into-windows'.format(output_dir_base)
+    out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir_base, window_size)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     # Process
     # ======#
     if is_test:
-        result = Window_dataset(input_dir, 'test', out_dir = out_dir, is_test = is_test)
+        result = Window_dataset(input_dir, 'test', win_size = window_size, out_dir = out_dir, is_test = is_test)
     else:
-        result = Window_dataset(input_dir, filetype, out_dir = out_dir + '/'+str(filetype))
+        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype))
