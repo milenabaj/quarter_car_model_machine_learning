@@ -166,7 +166,7 @@ if __name__ == "__main__":
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
     parser.add_argument('--filetype', default = 'train',
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
-    parser.add_argument('--window-size', default = '10',
+    parser.add_argument('--window-size', default = 10,
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
