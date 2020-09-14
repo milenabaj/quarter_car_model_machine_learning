@@ -168,9 +168,9 @@ if __name__ == "__main__":
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
     parser.add_argument('--window-size', default = '10',
                         help = 'Window size.')
-    parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized'.format(git_repo_path),
+    parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
-    parser.add_argument('--output_dir_base', default = '{0}/data/Golden-car-simulation-August-2020'.format(git_repo_path),
+    parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
 
     args = parser.parse_args()
