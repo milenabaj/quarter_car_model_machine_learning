@@ -72,6 +72,7 @@ class ModelInfo:
     def __init__(self, model, early_stopping = None, print_model_info = True,  onnx_input = None, out_dir = '.', save = True, model_name = ''):
         # Best Model
         self.model = model
+        self.model.use_teacher_forcing = False #turn of for predictions
         self.model.to(device)
         self.model_name = model_name
         self.out_dir = out_dir
@@ -94,7 +95,6 @@ class ModelInfo:
         log_vu('Model {0}: {1}'.format(self.model_name, pprint(to_print)))
     
     def save_model(self):    
-        self.model.use_teacher_forcing = False
         path = '{0}/trained_model_{1}.pt'.format(self.out_dir, self.model_name)
         torch.save(self.model, path)
         log_vu.info('Saved model as: {0}'.format(path))
