@@ -164,7 +164,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--test', default = False,
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
-    parser.add_argument('--filetype', default = 'train',
+    parser.add_argument('--filetype', default = 'valid',
                         help = 'Choose between train, test or valid. This file will be processed and output created.')
     parser.add_argument('--window-size', default = 10,
                         help = 'Window size.')
