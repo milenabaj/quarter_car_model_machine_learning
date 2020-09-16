@@ -66,7 +66,7 @@ if __name__ == "__main__":
                         help='Output directory for trained models and results.')
     
     # Run on cluster
-    parser.add_argument('--run_on_cluster', default = False,
+    parser.add_argument('--run_on_cluster', default = True,
                         help='Overwrite settings for running on cluster.')
  
     # Parse arguments
