@@ -73,6 +73,7 @@ class ModelInfo:
         
         # Best Model
         self.model = model
+        self.model.use_teacher_forcing = False #turn of for predictions
         self.model.to(device)
         self.model_type = model_type
         self.model_name = get_model_name(self.model_type)
@@ -97,7 +98,6 @@ class ModelInfo:
         log_vu('Model {0}: {1}'.format(self.model_name, pprint(to_print)))
     
     def save_model(self):    
-        self.model.use_teacher_forcing = False
         path = '{0}/trained_model_{1}.pt'.format(self.out_dir, self.model_name)
         torch.save(self.model, path)
         log_vu.info('Saved model as: {0}'.format(path))

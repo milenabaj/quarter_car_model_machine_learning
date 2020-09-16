@@ -102,7 +102,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
-        batch_size = 2048
+        batch_size = 1024
         do_test = True
         n_epochs = 120
         n_pred_plots = 100
