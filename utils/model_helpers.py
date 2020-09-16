@@ -69,11 +69,13 @@ class EarlyStopping:
     
  
 class ModelInfo:
-    def __init__(self, model, early_stopping = None, print_model_info = True,  onnx_input = None, out_dir = '.', save = True, model_name = ''):
+    def __init__(self, model, early_stopping = None, print_model_info = True,  onnx_input = None, out_dir = '.', save = True, model_type = ''):
+        
         # Best Model
         self.model = model
         self.model.to(device)
-        self.model_name = model_name
+        self.model_type = model_type
+        self.model_name = get_model_name(self.model_type)
         self.out_dir = out_dir
         self.onnx_input = onnx_input
         
@@ -87,7 +89,8 @@ class ModelInfo:
             
         if save:
             self.save_model()
-            
+        
+        
     def print_model_info(self):
         from pprint import pprint
         to_print = {k:v for k,v in vars(best_model_info).items() if k!='best_model_info'}
@@ -120,12 +123,12 @@ class ModelInfo:
         criterion = nn.MSELoss()
         self.model.eval()
         with torch.no_grad():
-            for batch_index, (features, speed,  orig_length, targets) in enumerate(dataloader):
+            for batch_index, (acc, speed,  orig_length, targets) in enumerate(dataloader):
                 #log_vu.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
-                features = features.permute(1,0)
-                features = features.unsqueeze(2).to(device)
+                acc = acc.permute(1,0)
+                acc = acc.unsqueeze(2).to(device)
     
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
@@ -136,7 +139,12 @@ class ModelInfo:
                 orig_lengths.append(orig_length.cpu().detach().numpy())
                 
                 # Get prediction
-                out = self.model(features, targets)
+                if self.model_type=='lstm_encdec':
+                    out = self.model(acc, targets)
+                elif self.model_type=='lstm_encdec_with_speed':
+                    speed = speed.reshape(1,acc.shape[1], 1)              
+                    out = self.model(acc, speed, targets)
+                        
                 predicted_targets.append(out.cpu().detach().numpy())
                 
                 # Compute loss
@@ -149,3 +157,10 @@ class ModelInfo:
                 
         mean_loss = mean(losses)
         return true_targets, predicted_targets, speeds, orig_lengths, mean_loss
+
+def get_model_name(model_type):
+    if model_type=='lstm_encdec':
+        return 'LSTM_encoder_decoder_acc'
+    elif model_type=='lstm_encdec_with_speed':
+        return 'LSTM_encoder_decoder_accspeed'
+    

@@ -21,7 +21,7 @@ from torch import optim
 from torch.optim import lr_scheduler
 from onnx import onnx
 from utils import data_loaders
-from machine_learning_modules import encoder_decoder
+from machine_learning_modules import encoder_decoder, encoder_decoder_with_speed
 from utils import various_utils, plot_utils, model_helpers
 
 # Device
@@ -51,9 +51,11 @@ if __name__ == "__main__":
     # Training and prediction
     parser.add_argument('--do_train', default = True,
                         help = 'Train using the train dataset.')
+    parser.add_argument('--model_type', default = 'lstm_encdec_with_speed',
+                        help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
-    parser.add_argument('--do_test', default = True,
+    parser.add_argument('--do_test', default = False,
                         help = 'Test on test dataset.')
 
 
@@ -64,55 +66,66 @@ if __name__ == "__main__":
                         help='Output directory for trained models and results.')
     
     # Run on cluster
-    parser.add_argument('--run_on_cluster', default = True,
-                        help='Run on cluster (changes input and output dir).')
+    parser.add_argument('--run_on_cluster', default = False,
+                        help='Overwrite settings for running on cluster.')
  
     # Parse arguments
     args = parser.parse_args()
+    if args.model_type not in ['lstm_encdec', 'lstm_encdec_with_speed']:
+        sys.exit('Unknown model passed. Choose beteen lstm_encdec and lstm_encdec_with_speed.')  
+    model_type = args.model_type
     max_length = args.max_length
-    speed_selection_range = args.speed_selection_range 
+    speed_selection_range = args.speed_selection_range  # Use only data with speed in the selected range
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     do_test = args.do_test
     nrows_to_load = args.nrows_to_load
-    if do_train_with_early_stopping: 
-        do_train=True
+    input_dir = args.input_dir
+    out_dir = args.out_dir
+    run_on_cluster = args.run_on_cluster
     
     # Other settings
-    window_size = 2 #   IMPORTANT for plotting!
+    window_size = 10 #   IMPORTANT for plotting!
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
-    model_name = 'LSTM_encoder_decoder'
     batch_size = 50 #'full_dataset'
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
     patience = 30
+    n_pred_plots = 5
     save_results = True
         
-    # Input and output directory
-    run_on_cluster = args.run_on_cluster
+    # ======== SET ========= #
+    # ======================= #
+    # If run on cluster
     if run_on_cluster:
-        input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows'
+        input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
         batch_size = 2048
         do_test = True
         n_epochs = 120
+        n_pred_plots = 100
         # plus change n_examples in the Plotter
-    else:
-        input_dir = args.input_dir
-        out_dir = args.out_dir
+
+    model_name = model_helpers.get_model_name(model_type)
+    
+    # Set flags
+    if do_train_with_early_stopping: 
+        do_train=True
         
+    # Create output directory    
     if speed_selection_range:
         out_dir = '{0}_windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
+        
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
     log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
+
 
     # ==== PREPARING DATA === #
     # ======================= #
@@ -150,9 +163,12 @@ if __name__ == "__main__":
     if do_train:
         
         # Model
-        model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
+        if model_type=='lstm_encdec':
+            model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
+        elif model_type=='lstm_encdec_with_speed':
+            model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True)  
         model.to(device)
-        
+
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
     
@@ -165,7 +181,7 @@ if __name__ == "__main__":
         
         # Early_stopping 
         early_stopping = model_helpers.EarlyStopping(patience = patience)
-        
+
         # Loop over epochs
         for epoch_index in range(0, n_epochs):
             log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
@@ -176,18 +192,26 @@ if __name__ == "__main__":
             log.info('=== Training..')
             train_batch_results = model_helpers.BatchResults()
             model.train()
-            for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
+            for batch_index, (acc, speed, orig_length, targets) in enumerate(train_dataloader):
                 #log.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
-                features = features.permute(1,0)
-                features = features.unsqueeze(2).to(device)
+                acc = acc.permute(1,0) 
+                acc = acc.unsqueeze(2).to(device)
     
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
     
+                log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
+                
                 # Get prediction
-                out = model(features, targets)
+                if model_type=='lstm_encdec':
+                    out = model(acc, targets)
+                elif model_type=='lstm_encdec_with_speed':
+                    speed = speed.reshape(1,batch_size, 1)              
+                    out = model(acc, speed, targets)
+    
+                #sys.exit(0)
                 #log.debug(out.shape)
                 
                 # Compute loss
@@ -211,18 +235,24 @@ if __name__ == "__main__":
                 valid_batch_results = model_helpers.BatchResults()
                 model.eval()
                 with torch.no_grad():
-                    for batch_index, (features, speed, orig_length, targets) in enumerate(train_dataloader):
+                    for batch_index, (acc, speed, orig_length, targets) in enumerate(train_dataloader):
                         #log.debug('Batch_index: {0}'.format(batch_index))
             
                         # Put into the correct dimensions for LSTM
-                        features = features.permute(1,0)
-                        features = features.unsqueeze(2).to(device)
+                        acc = acc.permute(1,0) 
+                        acc = acc.unsqueeze(2).to(device)
             
                         targets = targets.permute(1,0)
                         targets = targets.unsqueeze(2).to(device)
+            
+                        log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
                         
                         # Get prediction
-                        out = model(features, targets)
+                        if model_type=='lstm_encdec':
+                            out = model(acc, targets)
+                        elif model_type=='lstm_encdec_with_speed':
+                            speed = speed.reshape(1,batch_size, 1)              
+                            out = model(acc, speed, targets)
                         
                         # Compute loss
                         valid_loss = criterion(out, targets)
@@ -250,17 +280,17 @@ if __name__ == "__main__":
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
-# Onnx input
-onnx_input = (features, features) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure
 
-# Last Model
-log.debug('\n')
-log.debug('Last model: {0}'.format(model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
-log.debug('Last epoch: {0}\n'.format(epoch_index))
+# ======== BEST MODEL PREDICTIONS ========= #
+# ========================================= #
+# Onnx input
+if model_type=='lstm_encdec':
+    onnx_input = (acc)
+elif model_type=='lstm_encdec_with_speed':            
+    onnx_input = (acc, speed) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure
     
 # Best Model (saved as .pth and .onnx)
-best_model_info = model_helpers.ModelInfo(model, early_stopping = early_stopping, model_name = model_name, onnx_input = onnx_input, out_dir = out_dir)
-log.debug('Best model: {0}'.format(best_model_info.model.state_dict()['encoder.lstm.weight_ih_l0'].reshape(-1)[0:30]))
+best_model_info = model_helpers.ModelInfo(model, early_stopping = early_stopping, model_type = model_type, onnx_input = onnx_input, out_dir = out_dir)
 log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
 # Best Model Predictions
@@ -275,26 +305,24 @@ if do_test:
 if (do_train_with_early_stopping and do_test):
     plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train')
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid')
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test')
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples = n_pred_plots)
     
 elif (do_train_with_early_stopping and not do_test):
     plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, 
                                  save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train')
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid') 
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
     
 elif (not do_train_with_early_stopping and do_test):
     plotter = plot_utils.Plotter(window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test')
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
 
-# => TODO: Get original ts length -> unpad it to that and simulate random points up to 2m, and plot pred/true on that
-    
-# => TODO: Pass best model prediction to plotter and plot predicted and true time series
+log.info('Results saved to: {0}'.format(out_dir))
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler

@@ -78,7 +78,7 @@ class Plotter():
         plt.show()
         return
 
-    def plot_pred_vs_true_timeseries(self, true_batch, pred_batch, speeds, orig_lengths, dataset_type, batch_index_to_plot = 0,  n_examples = 100):
+    def plot_pred_vs_true_timeseries(self, true_batch, pred_batch, speeds, orig_lengths, dataset_type, batch_index_to_plot = 0,  n_examples = 4):
         import random
         plog.debug('Plotting predicted vs true timeseries plot for {0} dataset.'.format(dataset_type))
         plt.rc('font', size=50)
