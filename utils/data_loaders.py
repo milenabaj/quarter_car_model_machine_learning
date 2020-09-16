@@ -30,8 +30,10 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     dlog.info('===> Getting max lenght for datasets in: {0}'.format(input_dir))
     glob_max_length = 0
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        print('filename',filename)
         file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
+        
+        if file.empty:
+            continue #this selection
         
         # This file max lenght
         orig_lengths = file.acceleration.apply(lambda row: row.shape[0]).to_numpy(dtype='int')
@@ -60,6 +62,9 @@ def get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = 0, 
     dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
+        if file.empty:
+            continue #this selection
         dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq, max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load)
         data.append(dataset)
     dlog.info('\n')
