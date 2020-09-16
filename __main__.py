@@ -123,7 +123,7 @@ if __name__ == "__main__":
         
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
-    log.info('Output dir is: {0}/{1}\n'.format(os.getcwd(), out_dir))
+    log.info('Output dir is: {0}\n'.format(out_dir))
 
 
     # ==== PREPARING DATA === #

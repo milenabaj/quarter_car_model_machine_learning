@@ -35,6 +35,7 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
         
         # This file max lenght
         orig_lengths = file.acceleration.apply(lambda row: row.shape[0]).to_numpy(dtype='int')
+        print('orig_lengths', orig_lengths[0])
         this_file_max_length = np.max(orig_lengths)
         
         if this_file_max_length>glob_max_length:
