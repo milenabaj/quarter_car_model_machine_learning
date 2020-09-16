@@ -106,7 +106,6 @@ if __name__ == "__main__":
         do_test = True
         n_epochs = 120
         n_pred_plots = 100
-        # plus change n_examples in the Plotter
 
     model_name = model_helpers.get_model_name(model_type)
     
@@ -118,7 +117,7 @@ if __name__ == "__main__":
     if speed_selection_range:
         out_dir = '{0}_windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
-        out_dir = '{0}_{1}_{2}'.format(args.output_dir, model_name, device)
+        out_dir = '{0}_{1}_{2}'.format(out_dir, model_name, device)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
         
