@@ -30,6 +30,7 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     dlog.info('===> Getting max lenght for datasets in: {0}'.format(input_dir))
     glob_max_length = 0
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
+        print('filename',filename)
         file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
         
         # This file max lenght
