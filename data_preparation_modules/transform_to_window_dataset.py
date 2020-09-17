@@ -65,8 +65,8 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            print(self.input_dataframe['speed'][0], self.input_dataframe['speed'].shape)
-            print(self.input_dataframe['scaled_speed'][0], self.input_dataframe['scaled_speed'].shape)
+            print(self.input_dataframe['speed'][0:5], self.input_dataframe['speed'].shape)
+            print(self.input_dataframe['scaled_speed'][0:5], self.input_dataframe['scaled_speed'].shape)
             
         sys.exit(0)
         # Window columns to save
