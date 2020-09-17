@@ -159,8 +159,8 @@ if __name__ == "__main__":
     #home = os.path.expanduser('~')
     #git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
-    parser.add_argument('--is_test', action='store_false',
-                        help = 'If test is true, will process 100 rows only (use for testing purposes).')
+    parser.add_argument('--is_test', action='store_true', 
+                        help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
     parser.add_argument('--window-size', default = 5, type=int,
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
@@ -173,7 +173,9 @@ if __name__ == "__main__":
     output_dir = args.output_dir_base
     is_test = args.is_test
     window_size = args.window_size
-    print(is_test)
+    
+    print('Window_size: {0}'.format(window_size)
+    print('Is test: {0}'.format(is_test)
     
     for filetype in ['train','valid','test']:
         print('Processing :{0}'.format(filetype))
