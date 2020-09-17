@@ -30,17 +30,20 @@ class Window_dataset():
 
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
-        print(self.input_dataframe.shape[0])
+        print('is_test: ', is_test)
+        print('bef: ', self.input_dataframe.shape[0])
 
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         if self.test:
+            print('loading 100 only')
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe).head(100)
             self.n_split_rows_length = 20
         else:
+            print('loading all')
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe)
             self.n_split_rows_length = 1000
 
-        print(self.input_dataframe.shape[0])
+        print('after: ',self.input_dataframe.shape[0])
         sys.exit(0)
         # Take only needed columns
         self.input_columns = ['time','distance','speed', 'acceleration', 'severity', 'type', 'defect_width', 'defect_height']
