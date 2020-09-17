@@ -104,7 +104,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 512
         do_test = True
-        n_epochs = 1
+        n_epochs = 100
         n_pred_plots = 100
 
     model_name = model_helpers.get_model_name(model_type)
