@@ -169,7 +169,7 @@ if __name__ == "__main__":
         model.to(device)
 
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
     
         criterion = nn.MSELoss()
         criterion_valid = nn.MSELoss()
