@@ -158,7 +158,7 @@ if __name__ == "__main__":
     #home = os.path.expanduser('~')
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
-    parser.add_argument('--is_test', default = False, action='store_true,
+    parser.add_argument('--is_test', default = False, action='store_true',
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
     parser.add_argument('--window-size', default = 5, type=int,
                         help = 'Window size.')
