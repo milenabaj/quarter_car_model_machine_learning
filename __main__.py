@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [40,60], 
+    parser.add_argument('--speed_selection_range', default = [40,45], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # Training and prediction
     parser.add_argument('--do_train', default = True,
                         help = 'Train using the train dataset.')
-    parser.add_argument('--model_type', default = 'lstm_encdec_with_speed',
+    parser.add_argument('--model_type', default = 'lstm_encdec',
                         help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
         batch_size = 512
-        do_test = True
+        do_test = False
         n_epochs = 100
         n_pred_plots = 100
 
