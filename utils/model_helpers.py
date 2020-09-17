@@ -101,11 +101,11 @@ class ModelInfo:
         path = '{0}/trained_model_{1}.pt'.format(self.out_dir, self.model_name)
         torch.save(self.model, path)
         log_vu.info('Saved model as: {0}'.format(path))
-        
-        if self.onnx_input:
-            onnx_path = path.replace('.pt','.onnx')
-            torch.onnx.export(self.model, self.onnx_input, onnx_path, opset_version = 11)
-            log_vu.info('Saved model as: {0}'.format(onnx_path))
+    
+        # Onnx
+        onnx_path = path.replace('.pt','.onnx')
+        torch.onnx.export(self.model, self.onnx_input, onnx_path, opset_version = 11)
+        log_vu.info('Saved model as: {0}'.format(onnx_path))
 
     def predict(self, dataloader, n_batches = -1, datatype = ''):
         '''
