@@ -28,6 +28,10 @@ class Window_dataset():
         self.win_size = win_size
         self.test = is_test
 
+        # Create output dir for this filetype 
+        if not os.path.exists(self.out_dir):
+            os.makedirs(self.out_dir)
+            
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
 
