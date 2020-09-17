@@ -178,7 +178,7 @@ if __name__ == "__main__":
     print('Is test: {0}'.format(is_test))
     
     for filetype in ['train','valid','test']:
-        print('Processing :{0}'.format(filetype))
+        print('Processing: {0}'.format(filetype))
         
         # Make output directory
         out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir, window_size)
