@@ -57,7 +57,6 @@ class Window_dataset():
             print('Scaling speed')
             speed = self.input_dataframe['speed'].to_numpy()
             speed = speed.reshape(-1,1)
-            print(speed[0], speed.shape)
             scaler_filename = '/'.join(self.out_dir.split('/')[0:-1])+'/train_scaler_speed.pt'
             if self.filestring == 'train':
                 scaler = MinMaxScaler().fit(speed)
@@ -65,10 +64,7 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            print(self.input_dataframe['speed'][0:5], self.input_dataframe['speed'].shape)
-            print(self.input_dataframe['scaled_speed'][0:5], self.input_dataframe['scaled_speed'].shape)
-            
-        sys.exit(0)
+
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
         self.window_columns.append('window_class')
@@ -184,10 +180,6 @@ if __name__ == "__main__":
                         help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
     parser.add_argument('--window-size', default = 5, type=int,
                         help = 'Window size.')
-    #parser.add_argument('--input_dir', default = '/Users/mibaj/quarter_car_model_machine_learning/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster',
-    #                   help = 'Input directory.')
-    #parser.add_argument('--output_dir_base', default = '/Users/mibaj/quarter_car_model_machine_learning/data/Golden-car-simulation-August-2020',
-    #                    help='Directory base where a new directory with output files will be created.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
@@ -204,7 +196,7 @@ if __name__ == "__main__":
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
     
-    for filetype in ['valid','test']:
+    for filetype in ['train','valid','test']:
         print('Processing: {0}'.format(filetype))
         
         # Make output directory
