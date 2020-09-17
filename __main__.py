@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # Other settings
     window_size = 10 #   IMPORTANT for plotting!
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
-    batch_size = 50 #'full_dataset'
+    batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
@@ -102,8 +102,8 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
-        batch_size = 24
-        do_test = False
+        batch_size = 512
+        do_test = True
         n_epochs = 1
         n_pred_plots = 100
 
