@@ -209,6 +209,3 @@ if __name__ == "__main__":
         # ======#
         result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test)
 
-#
-# TODO: scale speeds
-# Recreate all
