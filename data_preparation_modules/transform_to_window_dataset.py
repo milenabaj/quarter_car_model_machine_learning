@@ -32,6 +32,7 @@ class Window_dataset():
         self.input_dataframe = self.load_pickle(input_dir, filestring)
 
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
+        print('Is test: {0}'.format(is_test))
         if self.test:
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe).head(100)
             self.n_split_rows_length = 20
@@ -156,7 +157,7 @@ class Window_dataset():
 if __name__ == "__main__":
 
     #home = os.path.expanduser('~')
-    git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
+    #git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--is_test', default = False, action='store_true',
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
