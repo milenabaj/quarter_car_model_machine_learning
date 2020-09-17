@@ -167,8 +167,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--test', default = False,
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
-    #parser.add_argument('--filetype', default = 'test',
-    #                    help = 'Choose between train, test or valid. This file will be processed and output created.')
     parser.add_argument('--window-size', default = 5,
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
@@ -182,7 +180,6 @@ if __name__ == "__main__":
         input_dir = args.input_dir
         output_dir = args.output_dir_base
         is_test = args.test
-        #filetype = args.filetype
         window_size = args.window_size
     
         # Make output directory
@@ -192,4 +189,5 @@ if __name__ == "__main__":
     
         # Process
         # ======#
-        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype),  self.input_dataframe.shape[0]), is_test = is_test)
+        result = Window_dataset(input_dir, filetype, win_size = window_size, 
+                                out_dir = out_dir + '/'+str(filetype),  self.input_dataframe.shape[0], is_test = is_test)
