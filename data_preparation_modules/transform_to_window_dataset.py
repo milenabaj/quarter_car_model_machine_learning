@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = True):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False):
 
         # Initial processing time
         t0=time.time()
@@ -30,21 +30,15 @@ class Window_dataset():
 
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
-        print('is_test: ', is_test)
-        print('bef: ', self.input_dataframe.shape[0])
 
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         if self.test:
-            print('loading 100 only')
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe).head(100)
             self.n_split_rows_length = 20
         else:
-            print('loading all')
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe)
             self.n_split_rows_length = 1000
 
-        print('after: ',self.input_dataframe.shape[0])
-        sys.exit(0)
         # Take only needed columns
         self.input_columns = ['time','distance','speed', 'acceleration', 'severity', 'type', 'defect_width', 'defect_height']
         self.deciding_column = 'type'
@@ -54,8 +48,8 @@ class Window_dataset():
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
         self.window_columns.append('window_class')
-
-        # Split input df into smaller ones (to run in parallel on split dataframes)
+        
+        # Split a very large input df into smaller ones to fit into RAM more easily
         print('Making split dataframes')
         self.n_input_rows = self.input_dataframe.shape[0]
         self.last_split = int(self.n_input_rows/self.n_split_rows_length)
@@ -68,7 +62,7 @@ class Window_dataset():
             print('===> Passing df: ',df_i)
             df.reset_index(inplace=True, drop=True)
             self.make_sliding_window_df(df_i, df)
-
+        
         dt = round(time.time()-t0,1)
         print('Time to process: {0} s'.format(dt))
 
@@ -165,7 +159,7 @@ if __name__ == "__main__":
     #home = os.path.expanduser('~')
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
-    parser.add_argument('--test', default = False,
+    parser.add_argument('--is_test', default = False,
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
     parser.add_argument('--window-size', default = 5,
                         help = 'Window size.')
@@ -175,13 +169,13 @@ if __name__ == "__main__":
                         help='Directory base where a new directory with output files will be created.')
 
     args = parser.parse_args()
+    input_dir = args.input_dir
+    output_dir = args.output_dir_base
+    is_test = args.is_test
+    window_size = args.window_size
     
     for filetype in ['train','valid','test']:
-        input_dir = args.input_dir
-        output_dir = args.output_dir_base
-        is_test = args.test
-        window_size = args.window_size
-    
+        
         # Make output directory
         out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir, window_size)
         if not os.path.exists(out_dir):
