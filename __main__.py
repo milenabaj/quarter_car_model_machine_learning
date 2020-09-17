@@ -103,8 +103,8 @@ if __name__ == "__main__":
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
         batch_size = 24
-        do_test = True
-        n_epochs = 120
+        do_test = False
+        n_epochs = 1
         n_pred_plots = 100
 
     model_name = model_helpers.get_model_name(model_type)
