@@ -61,7 +61,7 @@ class Window_dataset():
             print(speed[0], speed.shape)
             if self.filestring == 'train':
                 scaler = MinMaxScaler().fit(speed)
-                pickle.dump(scaler, open(scaler_file), 'wb'))
+                pickle.dump(scaler, open(scaler_file, 'wb'))
             else:
                 scaler = pickle.load(open(scaler_file, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
