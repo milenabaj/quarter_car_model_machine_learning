@@ -78,7 +78,8 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
         if speed_selection_range:
             speed_min = speed_selection_range[0]
             speed_max = speed_selection_range[1]
-            cond = (df.speed > speed_min) & (df.speed < speed_max)
+            cond = df.speed.between(speed_min, speed_max)
+            #cond = (df.speed >= speed_min) & (df.speed <= speed_max)
             df = df[cond]
             df.reset_index(inplace=True, drop=True)
         if use_cols:
