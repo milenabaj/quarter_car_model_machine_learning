@@ -82,7 +82,7 @@ if __name__ == "__main__":
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir = args.out_dir
-    run_on_cluster = args.run_on_cluster
+    run_on_cluster = args.run_on_cluster #
     
     # Other settings
     window_size = 10 #   IMPORTANT for plotting!
