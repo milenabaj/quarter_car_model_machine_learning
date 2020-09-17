@@ -27,10 +27,10 @@ class Window_dataset():
         self.filestring = filestring
         self.win_size = win_size
         self.test = is_test
-        self.n_processes = 1 #cpu_count()
 
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
+        print(self.input_dataframe.shape[0])
 
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         if self.test:
@@ -40,6 +40,8 @@ class Window_dataset():
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe)
             self.n_split_rows_length = 1000
 
+        print(self.input_dataframe.shape[0])
+        sys.exit(0)
         # Take only needed columns
         self.input_columns = ['time','distance','speed', 'acceleration', 'severity', 'type', 'defect_width', 'defect_height']
         self.deciding_column = 'type'
@@ -57,9 +59,7 @@ class Window_dataset():
         self.index_list =  [n*self.n_split_rows_length for n in range(1,self.last_split+1)]
         self.split_input_dataframes = np.split(self.input_dataframe, self.index_list)
         self.n_splits = len(self.split_input_dataframes)
-
         print('Number of split dataframes: {0}'.format(self.n_splits))
-        print('Number of processes: {0}'.format(self.n_processes))
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
             print('===> Passing df: ',df_i)
