@@ -204,7 +204,7 @@ if __name__ == "__main__":
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
     
-    for filetype in ['train','valid','test']:
+    for filetype in ['valid','test']:
         print('Processing: {0}'.format(filetype))
         
         # Make output directory
