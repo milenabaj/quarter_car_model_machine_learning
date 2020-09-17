@@ -55,14 +55,15 @@ class Window_dataset():
         # Scale speed
         if self.scale_speed:
             print('Scaling speed')
-            scaler_file = self.out_dir+'/train_scaler_speed.pt'
             speed = self.input_dataframe['speed'].to_numpy()
             speed = speed.reshape(-1,1)
             print(speed[0], speed.shape)
             if self.filestring == 'train':
                 scaler = MinMaxScaler().fit(speed)
+                scaler_file = self.out_dir+'/train_scaler_speed.pt'
                 pickle.dump(scaler, open(scaler_file, 'wb'))
             else:
+                scaler_file = self.out_dir.replace(filetype,'train')+'/train_scaler_speed.pt'
                 scaler = pickle.load(open(scaler_file, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
             print(self.input_dataframe['speed'][0], self.input_dataframe['speed'].shape)
@@ -204,7 +205,7 @@ if __name__ == "__main__":
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
     
-    for filetype in ['valid','test']:
+    for filetype in ['train','valid','test']:
         print('Processing: {0}'.format(filetype))
         
         # Make output directory
