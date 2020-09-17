@@ -194,7 +194,6 @@ class lstm_seq2seq_with_speed(nn.Module):
         # First decoder hidden state: last encoder hidden state (batch_size, input_size)
         decoder_input = torch.zeros([1, batch_size, 1]).to(self.device)
         decoder_hidden = (torch.cat((encoder_hidden[0], speed), dim=2), torch.cat((encoder_hidden[1], speed), dim=2))
-        print('decoder_hidden[0] : ',decoder_hidden[0].shape)
         
         # To cuda
         decoder_hidden[0].to(self.device)

@@ -91,6 +91,8 @@ class Plotter():
 
         # Samples to plot
         n_samples = true_batch.shape[1] # batch size
+        if n_examples>n_samples: #asked to plot more examples than there are samples in the batch
+            n_examples=n_samples
         random.seed(123)
         examples = random.sample(range(n_samples), n_examples) #sample n_examples number of sequences from the batch
       
