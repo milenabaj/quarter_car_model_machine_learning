@@ -207,7 +207,7 @@ if __name__ == "__main__":
                 if model_type=='lstm_encdec':
                     out = model(acc, targets)
                 elif model_type=='lstm_encdec_with_speed':
-                    speed = speed.reshape(1,batch_size, 1).to(device)              
+                    speed = speed.reshape(1,acc.shape[1], 1).to(device)              
                     out = model(acc, speed, targets)
     
                 #sys.exit(0)
@@ -250,7 +250,7 @@ if __name__ == "__main__":
                         if model_type=='lstm_encdec':
                             out = model(acc, targets)
                         elif model_type=='lstm_encdec_with_speed':
-                            speed = speed.reshape(1,batch_size, 1).to(device)             
+                            speed = speed.reshape(1,acc.shape[1], 1).to(device)             
                             out = model(acc, speed, targets)
                         
                         # Compute loss
