@@ -201,7 +201,6 @@ if __name__ == "__main__":
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
     
-                log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
                 
                 # Get prediction
                 if model_type=='lstm_encdec':
