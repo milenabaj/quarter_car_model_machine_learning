@@ -85,7 +85,7 @@ if __name__ == "__main__":
     run_on_cluster = args.run_on_cluster #
     
     # Other settings
-    window_size = 10 #   IMPORTANT for plotting!
+    window_size = 2 #   IMPORTANT for plotting!
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     batch_size = 24
     num_workers = 0 #0
