@@ -50,7 +50,6 @@ class Window_dataset():
         self.window_columns.append('window_class')
         
         # Split a very large input df into smaller ones to fit into RAM more easily
-        print('Making split dataframes')
         self.n_input_rows = self.input_dataframe.shape[0]
         self.last_split = int(self.n_input_rows/self.n_split_rows_length)
         self.index_list =  [n*self.n_split_rows_length for n in range(1,self.last_split+1)]
@@ -96,7 +95,7 @@ class Window_dataset():
 
         window_df.reset_index(inplace=True, drop=True)
 
-        # Save pickle
+        # Save picklescree
         self.save_pickle(window_df, self.out_dir, self.filestring+'_'+ str(df_i))
         return
 
@@ -159,9 +158,9 @@ if __name__ == "__main__":
     #home = os.path.expanduser('~')
     git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
-    parser.add_argument('--is_test', default = False,
+    parser.add_argument('--is_test', default = False, action='store_true,
                         help = 'If test is true, will process 100 rows only (use for testing purposes).')
-    parser.add_argument('--window-size', default = 5,
+    parser.add_argument('--window-size', default = 5, type=int,
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
@@ -175,9 +174,11 @@ if __name__ == "__main__":
     window_size = args.window_size
     
     for filetype in ['train','valid','test']:
+        print('Processing :{0}'.format(filetype))
         
         # Make output directory
         out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir, window_size)
+        print('Output directory: {0}'.format(out_dir))
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
     
