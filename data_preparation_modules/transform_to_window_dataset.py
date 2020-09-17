@@ -192,7 +192,4 @@ if __name__ == "__main__":
     
         # Process
         # ======#
-        if is_test:
-            result = Window_dataset(input_dir, 'test', win_size = window_size, out_dir = out_dir, is_test = is_test)
-        else:
-            result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype))
+        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype),  self.input_dataframe.shape[0]), is_test = is_test)
