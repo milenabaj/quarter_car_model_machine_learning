@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = True):
 
         # Initial processing time
         t0=time.time()
@@ -27,6 +27,7 @@ class Window_dataset():
         self.filestring = filestring
         self.win_size = win_size
         self.test = is_test
+        self.scale_speed = scale_speed
 
         # Create output dir for this filetype 
         if not os.path.exists(self.out_dir):
@@ -50,6 +51,16 @@ class Window_dataset():
         self.filestring = self.filestring
         self.input_dataframe = self.input_dataframe[self.input_columns]
 
+        # Scale speed
+        if self.scale_speed:
+            print('Scaling speed')
+            print(self.input_dataframe['speed'][0], self.input_dataframe['speed'][0].shape)
+            if self.filestring == 'train':
+                scaler = MinMaxScaler().fit(self.input_dataframe['speed'])
+                self.input_dataframe['scaled_speed'] = scaler.transform(self.input_dataframe['speed'])
+            print(self.input_dataframe['scaled_speed'][0], self.input_dataframe['scaled_speed'][0].shape)
+            
+        sys.exit(0)
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
         self.window_columns.append('window_class')
@@ -165,6 +176,10 @@ if __name__ == "__main__":
                         help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
     parser.add_argument('--window-size', default = 5, type=int,
                         help = 'Window size.')
+    #parser.add_argument('--input_dir', default = '/Users/mibaj/quarter_car_model_machine_learning/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster',
+    #                   help = 'Input directory.')
+    #parser.add_argument('--output_dir_base', default = '/Users/mibaj/quarter_car_model_machine_learning/data/Golden-car-simulation-August-2020',
+    #                    help='Directory base where a new directory with output files will be created.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
@@ -182,6 +197,7 @@ if __name__ == "__main__":
     print('Is test: {0}'.format(is_test))
     
     for filetype in ['train','valid','test']:
+        input_dir = input_dir+'/'+filetype
         print('Processing: {0}'.format(filetype))
         
         # Make output directory
@@ -193,3 +209,7 @@ if __name__ == "__main__":
         # Process
         # ======#
         result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test)
+
+#
+# TODO: scale speeds
+# Recreate all

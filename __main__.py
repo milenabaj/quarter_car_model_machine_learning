@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # If run on cluster
     if run_on_cluster:
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
-        out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
+        out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' 
         nrows_to_load = -1
         batch_size = 512
         do_test = False
