@@ -142,7 +142,7 @@ class ModelInfo:
                 if self.model_type=='lstm_encdec':
                     out = self.model(acc, targets)
                 elif self.model_type=='lstm_encdec_with_speed':
-                    speed = speed.reshape(1,acc.shape[1], 1)              
+                    speed = speed.reshape(1,acc.shape[1], 1).to(device)              
                     out = self.model(acc, speed, targets)
                         
                 predicted_targets.append(out.cpu().detach().numpy())

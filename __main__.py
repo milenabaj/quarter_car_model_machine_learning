@@ -102,7 +102,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020' 
         nrows_to_load = -1
-        batch_size = 24
+        batch_size = 
         do_test = False
         n_epochs = 1
         n_pred_plots = 100
@@ -207,7 +207,7 @@ if __name__ == "__main__":
                 if model_type=='lstm_encdec':
                     out = model(acc, targets)
                 elif model_type=='lstm_encdec_with_speed':
-                    speed = speed.reshape(1,batch_size, 1)              
+                    speed = speed.reshape(1,batch_size, 1).to(device)              
                     out = model(acc, speed, targets)
     
                 #sys.exit(0)
@@ -250,7 +250,7 @@ if __name__ == "__main__":
                         if model_type=='lstm_encdec':
                             out = model(acc, targets)
                         elif model_type=='lstm_encdec_with_speed':
-                            speed = speed.reshape(1,batch_size, 1)              
+                            speed = speed.reshape(1,batch_size, 1).to(device)             
                             out = model(acc, speed, targets)
                         
                         # Compute loss
