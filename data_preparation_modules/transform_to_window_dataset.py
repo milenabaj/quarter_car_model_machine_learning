@@ -197,7 +197,6 @@ if __name__ == "__main__":
     print('Is test: {0}'.format(is_test))
     
     for filetype in ['train','valid','test']:
-        input_dir = input_dir+'/'+filetype
         print('Processing: {0}'.format(filetype))
         
         # Make output directory
