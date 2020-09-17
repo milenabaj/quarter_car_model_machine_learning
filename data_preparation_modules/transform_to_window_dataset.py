@@ -55,12 +55,14 @@ class Window_dataset():
         # Scale speed
         if self.scale_speed:
             print('Scaling speed')
-            speed = self.input_dataframe['speed'].numpy()
+            speed = self.input_dataframe['speed'].to_numpy()
+            speed = speed.reshape(-1,1)
             print(speed[0], speed.shape)
             if self.filestring == 'train':
-                scaler = MinMaxScaler().fit(speed])
+                scaler = MinMaxScaler().fit(speed)
                 self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            print(self.input_dataframe['scaled_speed'][0], self.input_dataframe['scaled_speed'][0].shape)
+            print(self.input_dataframe['speed'][0], self.input_dataframe['speed'].shape)
+            print(self.input_dataframe['scaled_speed'][0], self.input_dataframe['scaled_speed'].shape)
             
         sys.exit(0)
         # Window columns to save
