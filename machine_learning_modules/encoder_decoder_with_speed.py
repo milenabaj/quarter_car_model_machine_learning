@@ -206,14 +206,14 @@ class lstm_seq2seq_with_speed(nn.Module):
         if self.use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
             for t in range(self.target_len):
-                print('Seq2Seq forward - decoder input: ',decoder_input.shape)
-                print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
+                #print('Seq2Seq forward - decoder input: ',decoder_input.shape)
+                #print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
                 decoder_input.to(self.device)
                 decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden)
                 outputs[t] = decoder_output
                 decoder_input = target_batch[t,:,:].unsqueeze(0) # current target will be the input in the next timestep
-                print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
-                print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
+                #print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
+                #print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
 
         else:
             # Without teacher forcing: use its own predictions as the next input
