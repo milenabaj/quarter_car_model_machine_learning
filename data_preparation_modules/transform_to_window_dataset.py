@@ -156,8 +156,6 @@ class Window_dataset():
 
 if __name__ == "__main__":
 
-    #home = os.path.expanduser('~')
-    #git_repo_path = subprocess.check_output('git rev-parse --show-toplevel', shell=True, encoding = 'utf-8').strip()
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--is_test', action='store_true', 
                         help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
@@ -168,14 +166,16 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
 
+    # Parse arguments
     args = parser.parse_args()
     input_dir = args.input_dir
     output_dir = args.output_dir_base
     is_test = args.is_test
     window_size = args.window_size
     
-    print('Window_size: {0}'.format(window_size)
-    print('Is test: {0}'.format(is_test)
+    # Print configuration
+    print('Window_size: {0}'.format(window_size))
+    print('Is test: {0}'.format(is_test))
     
     for filetype in ['train','valid','test']:
         print('Processing :{0}'.format(filetype))
