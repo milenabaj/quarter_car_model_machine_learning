@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [40,45], 
+    parser.add_argument('--speed_selection_range', default = [40,41], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 512
         do_test = False
-        n_epochs = 100
+        n_epochs = 200
         n_pred_plots = 100
 
     model_name = model_helpers.get_model_name(model_type)
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                         targets = targets.permute(1,0)
                         targets = targets.unsqueeze(2).to(device)
             
-                        log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
+                        #log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
                         
                         # Get prediction
                         if model_type=='lstm_encdec':
@@ -268,7 +268,7 @@ if __name__ == "__main__":
         
                 if early_stopping.early_stop:
                     log.info("Early stopping")
-                    log.info('Epoch: {0}/{1}, Train Loss: {2:.5f},  Valid Loss: {2:.5f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
+                    log.info('Epoch: {0}/{1}, Train Loss: {2:.6f},  Valid Loss: {2:.6f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
                     break
                 
             # Update LR
