@@ -115,8 +115,8 @@ class Window_dataset():
         # Fill Dataframe with windows from initial one
         for index, row in input_dataframe_part.iterrows():
             if (index%100==0):
-                print('Processing row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-                print('Window_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
+                print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
+                print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
                 ram_per = psutil.virtual_memory().percent
                 print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
