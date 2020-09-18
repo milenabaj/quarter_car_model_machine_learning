@@ -39,9 +39,9 @@ class Window_dataset():
         self.input_dataframe = self.load_pickle(input_dir, filestring)
         
         # Change dtypes for df to save RAM
-        print('Initial dtypes: ', self.input_dataframe.dtypes)
+        #print('Initial dtypes: ', self.input_dataframe.dtypes)
         #self.input_dataframe = self.input_dataframe.astype({"a": int, "b": complex})
-        sys.exit(0)
+        #sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         print('Is test: {0}'.format(is_test))
@@ -165,7 +165,7 @@ class Window_dataset():
                         row_df.at[i,col] = row[col][i: window_end_index]
                     else:
                         row_df.at[i,col] = row[col] #float or string, just repeat
-                    print('....Row_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
+                    #print('....Row_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
             except:
                 pass
         return row_df
