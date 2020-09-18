@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+import psutil
 
 class Window_dataset():
 
@@ -36,7 +37,12 @@ class Window_dataset():
             
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
-
+        
+        # Change dtypes for df to save RAM
+        print('Initial dtypes: ', self.input_dataframe.dtypes)
+        #self.input_dataframe = self.input_dataframe.astype({"a": int, "b": complex})
+        sys.exit(0)
+        
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         print('Is test: {0}'.format(is_test))
         if self.test:
@@ -44,7 +50,7 @@ class Window_dataset():
             self.n_split_rows_length = 20
         else:
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe)
-            self.n_split_rows_length = 1000
+            self.n_split_rows_length = 500
 
         # Take only needed columns
         self.input_columns = ['time','distance','speed', 'acceleration', 'severity', 'type', 'defect_width', 'defect_height']
@@ -64,12 +70,12 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-
+        
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
         self.window_columns.append('window_class')
         
-        # Split a very large input df into smaller ones to fit into RAM more easily
+        # Split a very large input df into smaller ones to process part by part (fit into RAM more easily)
         self.n_input_rows = self.input_dataframe.shape[0]
         self.last_split = int(self.n_input_rows/self.n_split_rows_length)
         self.index_list =  [n*self.n_split_rows_length for n in range(1,self.last_split+1)]
@@ -108,8 +114,11 @@ class Window_dataset():
 
         # Fill Dataframe with windows from initial one
         for index, row in input_dataframe_part.iterrows():
-            if (index%500==0):
+            if (index%100==0):
                 print('Processing row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
+                print('Window_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
+                ram_per = psutil.virtual_memory().percent
+                print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
             window_df = window_df.append(row_df)
 
@@ -156,7 +165,7 @@ class Window_dataset():
                         row_df.at[i,col] = row[col][i: window_end_index]
                     else:
                         row_df.at[i,col] = row[col] #float or string, just repeat
-
+                    print('....Row_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
             except:
                 pass
         return row_df
