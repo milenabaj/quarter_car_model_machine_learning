@@ -49,7 +49,6 @@ class Window_dataset():
         print('Changed dtypes: ',dtypes)
         mem = self.input_dataframe.info(verbose=False, memory_usage="deep")
         print('memory usage: ',mem)
-        sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         print('Is test: {0}'.format(is_test))
