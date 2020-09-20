@@ -74,7 +74,7 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            self.input_dataframe.astype({'scaled_speed': float16))
+            self.input_dataframe.astype({'scaled_speed': float16})
                                                                 
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
