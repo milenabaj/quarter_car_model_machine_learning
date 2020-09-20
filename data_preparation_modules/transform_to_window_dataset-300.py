@@ -41,10 +41,14 @@ class Window_dataset():
         # Change dtypes for df to save RAM
         dtypes = self.input_dataframe.dtypes
         print('Initial dtypes: ',dtypes)
-        self.input_dataframe.astype({'defect_height': float16, 'defect_width': float16,
-                                     'speed':float16,'sampling_freq':float16})
+        mem = self.input_dataframe.info(verbose=False, memory_usage="deep")
+        print('memory usage: ',mem)
+        self.input_dataframe = self.input_dataframe.astype({'defect_height': np.float16, 'defect_width': np.float16,
+                                     'speed':np.float16,'sampling_freq':np.float16})
         dtypes = self.input_dataframe.dtypes
         print('Changed dtypes: ',dtypes)
+        mem = self.input_dataframe.info(verbose=False, memory_usage="deep")
+        print('memory usage: ',mem)
         sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
@@ -74,7 +78,7 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            self.input_dataframe.astype({'scaled_speed': float16})
+             self.input_dataframe = self.input_dataframe.astype({'scaled_speed': np.float16})
                                                                 
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
