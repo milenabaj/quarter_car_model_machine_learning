@@ -39,7 +39,8 @@ class Window_dataset():
         self.input_dataframe = self.load_pickle(input_dir, filestring)
         
         # Change dtypes for df to save RAM
-        #print('Initial dtypes: ', self.input_dataframe.dtypes)
+        dtypes = self.input_dataframe.dtypes
+        print('Initial dtypes: ',dtypes)
         #self.input_dataframe = self.input_dataframe.astype({"a": int, "b": complex})
         sys.exit(0)
         
