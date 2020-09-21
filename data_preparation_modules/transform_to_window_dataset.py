@@ -75,7 +75,7 @@ class Window_dataset():
         self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
         # Window columns to save
-        self.window_columns = [col for col in self.input_columns if col not in ['distance','type','time']]
+        self.window_columns = [col for col in self.input_dataframe.columns if col not in ['distance','type','time']]
         self.window_columns.append('window_class')
         
         # Split a very large input df into smaller ones to process part by part (fit into RAM more easily)
@@ -196,7 +196,7 @@ class Window_dataset():
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
         dtypes = df.dtypes
         print(dtypes)
-        #df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
+        df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
         df.to_pickle(pickle_name)
         print('Wrote output file to: ',pickle_name)
         sys.exit(0)
