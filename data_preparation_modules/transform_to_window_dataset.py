@@ -68,6 +68,8 @@ class Window_dataset():
             speed = speed.reshape(-1,1)
             scaler = MinMaxScaler().fit(speed)
             pickle.dump(scaler, open(scaler_filename, 'wb'))
+        speed = self.input_dataframe['speed'].to_numpy()
+        speed = speed.reshape(-1,1)
         self.input_dataframe['scaled_speed'] = scaler.transform(speed)
         self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
@@ -206,13 +208,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
     parser.add_argument('--is_test', action='store_true', 
                         help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
-    parser.add_argument('--window-size', default = 5, type=int,
+    parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
-    parser.add_argument('--df-i-min', default = 0, type=int, help = 'df i minimum')
+    parser.add_argument('--df_i_min', default = 0, type=int, help = 'df i minimum')
 
 
     # Parse arguments
