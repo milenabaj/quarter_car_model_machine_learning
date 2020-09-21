@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 5, out_dir = '', is_test = False, scale_speed = False):
+    def __init__(self, input_dir, filestring, win_size = 5, out_dir = '', is_test = False, scale_speed = True, df_i_min = 0):
 
         # Initial processing time
         t0=time.time()
@@ -84,6 +84,9 @@ class Window_dataset():
         print('Number of split dataframes: {0}'.format(self.n_splits))
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
+            
+            if (df_i_min<=df_i<df_i_min+10) is False:
+                continue
             
             # Skip if it exists
             pickle_name = self.filestring+'_'+ str(df_i)
@@ -208,6 +211,7 @@ if __name__ == "__main__":
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
+    parser.add_argument('--df-i-min', default = 0, type=int, help = 'Window size.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -215,10 +219,12 @@ if __name__ == "__main__":
     output_dir = args.output_dir_base
     is_test = args.is_test
     window_size = args.window_size
+    df_i_min = args.df_i_min
     
     # Print configuration
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
+    print('df_i_min: {0}'.format(df_i_min))
     
     #for filetype in ['train','valid','test']:
     for filetype in ['valid']:
@@ -232,5 +238,5 @@ if __name__ == "__main__":
     
         # Process
         # ======#
-        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test)
+        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test, df_i_min = df_i_min)
 
