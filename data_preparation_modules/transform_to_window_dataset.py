@@ -195,11 +195,10 @@ class Window_dataset():
         print('Saving {0} as pickle.'.format(df_type))
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
         df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
-        dtypes = df.dtypes
-        print(dtypes)
+        #dtypes = df.dtypes
+        #print(dtypes)
         df.to_pickle(pickle_name)
         print('Wrote output file to: ',pickle_name)
-        sys.exit(0)
         return
 
 
