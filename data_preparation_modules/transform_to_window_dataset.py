@@ -210,7 +210,7 @@ if __name__ == "__main__":
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
-    parser.add_argument('--output_dir_base', default = '/dtu-compute/lira/Golden-car-simulation-August-2020',
+    parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
     parser.add_argument('--df-i-min', default = 0, type=int, help = 'df i minimum')
 
