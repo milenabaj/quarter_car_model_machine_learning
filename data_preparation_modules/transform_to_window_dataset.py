@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False, df_i_min = 0):
 
         # Initial processing time
         t0=time.time()
@@ -29,7 +29,7 @@ class Window_dataset():
         self.filestring = filestring
         self.win_size = win_size
         self.test = is_test
-        self.scale_speed = scale_speed
+        self.get_scaler = scale_speed
 
         # Create output dir for this filetype 
         if not os.path.exists(self.out_dir):
@@ -40,7 +40,7 @@ class Window_dataset():
         
         # Change dtypes for df to save RAM
         #print('Initial dtypes: ', self.input_dataframe.dtypes)
-        #self.input_dataframe = self.input_dataframe.astype({"a": int, "b": complex})
+        self.input_dataframe = self.input_dataframe.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16})
         #sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
@@ -59,20 +59,20 @@ class Window_dataset():
         self.input_dataframe = self.input_dataframe[self.input_columns]
 
         # Scale speed
-        if self.scale_speed:
-            print('Scaling speed')
+        scaler_filename = '/'.join(self.out_dir.split('/')[0:-1])+'/train_scaler_speed.pt'
+        if os.path.exists(scaler_filename):
+            scaler = pickle.load(open(scaler_filename, 'rb'))
+        elif self.filestring == 'train':
+            print('Getting train scaler')
             speed = self.input_dataframe['speed'].to_numpy()
             speed = speed.reshape(-1,1)
-            scaler_filename = '/'.join(self.out_dir.split('/')[0:-1])+'/train_scaler_speed.pt'
-            if self.filestring == 'train':
-                scaler = MinMaxScaler().fit(speed)
-                pickle.dump(scaler, open(scaler_filename, 'wb'))
-            else:
-                scaler = pickle.load(open(scaler_filename, 'rb'))
-            self.input_dataframe['scaled_speed'] = scaler.transform(speed)
+            scaler = MinMaxScaler().fit(speed)
+            pickle.dump(scaler, open(scaler_filename, 'wb'))
+        self.input_dataframe['scaled_speed'] = scaler.transform(speed)
+        self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
         # Window columns to save
-        self.window_columns = [col for col in self.input_columns if col!=('distance')]
+        self.window_columns = [col for col in self.input_columns if col not in ['distance','type','time']]
         self.window_columns.append('window_class')
         
         # Split a very large input df into smaller ones to process part by part (fit into RAM more easily)
@@ -84,6 +84,9 @@ class Window_dataset():
         print('Number of split dataframes: {0}'.format(self.n_splits))
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
+            
+            if (df_i_min<=df_i<df_i_min+20) is False:
+                continue
             
             # Skip if it exists
             pickle_name = self.filestring+'_'+ str(df_i)
@@ -132,7 +135,7 @@ class Window_dataset():
 
         window_df.reset_index(inplace=True, drop=True)
 
-        # Save picklescree
+        # Save pickle
         self.save_pickle(window_df, self.out_dir, self.filestring+'_'+ str(df_i))
         return
 
@@ -170,7 +173,7 @@ class Window_dataset():
                         else:
                             raise Error("More than 1 defect per window not implemented.")
                     elif isinstance(row[col],np.ndarray): # fill numpy array columns
-                        row_df.at[i,col] = row[col][i: window_end_index]
+                        row_df.at[i,col] = row[col][i: window_end_index].astype(np.float16)
                     else:
                         row_df.at[i,col] = row[col] #float or string, just repeat
                     #print('....Row_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
@@ -188,6 +191,7 @@ class Window_dataset():
     def save_pickle(self, df, out_dir, df_type):
         print('Saving {0} as pickle.'.format(df_type))
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
+        df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
         df.to_pickle(pickle_name)
         print('Wrote output file to: ',pickle_name)
         return
@@ -206,8 +210,10 @@ if __name__ == "__main__":
                         help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
-    parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
+    parser.add_argument('--output_dir_base', default = '/dtu-compute/lira/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
+    parser.add_argument('--df-i-min', default = 0, type=int, help = 'df i minimum')
+
 
     # Parse arguments
     args = parser.parse_args()
@@ -215,6 +221,7 @@ if __name__ == "__main__":
     output_dir = args.output_dir_base
     is_test = args.is_test
     window_size = args.window_size
+    df_i_min = args.df_i_min
     
     # Print configuration
     print('Window_size: {0}'.format(window_size))
@@ -232,5 +239,5 @@ if __name__ == "__main__":
     
         # Process
         # ======#
-        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test)
+        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test, df_i_min = df_i_min)
 
