@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False, df_i_min = 0):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, df_i_min = 0):
 
         # Initial processing time
         t0=time.time()
@@ -29,7 +29,6 @@ class Window_dataset():
         self.filestring = filestring
         self.win_size = win_size
         self.test = is_test
-        self.get_scaler = scale_speed
 
         # Create output dir for this filetype 
         if not os.path.exists(self.out_dir):
@@ -58,7 +57,7 @@ class Window_dataset():
         self.filestring = self.filestring
         self.input_dataframe = self.input_dataframe[self.input_columns]
 
-        # Scale speed
+        # Get scaler
         scaler_filename = '/'.join(self.out_dir.split('/')[0:-1])+'/train_scaler_speed.pt'
         if os.path.exists(scaler_filename):
             scaler = pickle.load(open(scaler_filename, 'rb'))
@@ -68,8 +67,11 @@ class Window_dataset():
             speed = speed.reshape(-1,1)
             scaler = MinMaxScaler().fit(speed)
             pickle.dump(scaler, open(scaler_filename, 'wb'))
-        speed = self.input_dataframe['speed'].to_numpy()
-        speed = speed.reshape(-1,1)
+            
+        # Scale speed 
+        if not speed:
+            speed = self.input_dataframe['speed'].to_numpy()
+            speed = speed.reshape(-1,1)
         self.input_dataframe['scaled_speed'] = scaler.transform(speed)
         self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
@@ -193,9 +195,12 @@ class Window_dataset():
     def save_pickle(self, df, out_dir, df_type):
         print('Saving {0} as pickle.'.format(df_type))
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
-        df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
+        dtypes = df.dtypes
+        print(dtypes)
+        #df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
         df.to_pickle(pickle_name)
         print('Wrote output file to: ',pickle_name)
+        sys.exit(0)
         return
 
 
