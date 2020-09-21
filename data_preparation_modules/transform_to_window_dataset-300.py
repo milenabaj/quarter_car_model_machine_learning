@@ -15,11 +15,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import psutil
-from multiprocessing import Pool
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False, ):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False):
 
         # Initial processing time
         t0=time.time()
@@ -40,16 +39,9 @@ class Window_dataset():
         self.input_dataframe = self.load_pickle(input_dir, filestring)
         
         # Change dtypes for df to save RAM
-        #dtypes = self.input_dataframe.dtypes
-        #print('Initial dtypes: ',dtypes)
-        #mem = self.input_dataframe.info(verbose=False, memory_usage="deep")
-        #print('memory usage: ',mem)
-        self.input_dataframe = self.input_dataframe.astype({'defect_height': np.float16, 'defect_width': np.float16,
-                                     'speed':np.float16,'sampling_freq':np.float16})
-        #dtypes = self.input_dataframe.dtypes
-        #print('Changed dtypes: ',dtypes)
-        #mem = self.input_dataframe.info(verbose=False, memory_usage="deep")
-        #print('memory usage: ',mem)
+        #print('Initial dtypes: ', self.input_dataframe.dtypes)
+        #self.input_dataframe = self.input_dataframe.astype({"a": int, "b": complex})
+        #sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         print('Is test: {0}'.format(is_test))
@@ -78,13 +70,12 @@ class Window_dataset():
             else:
                 scaler = pickle.load(open(scaler_filename, 'rb'))
             self.input_dataframe['scaled_speed'] = scaler.transform(speed)
-            self.input_dataframe = self.input_dataframe.astype({'scaled_speed': np.float16})
-                                                                
+        
         # Window columns to save
         self.window_columns = [col for col in self.input_columns if col!=('distance')]
         self.window_columns.append('window_class')
         
-        # Split a very large input df into subsets for parallel processing
+        # Split a very large input df into smaller ones to process part by part (fit into RAM more easily)
         self.n_input_rows = self.input_dataframe.shape[0]
         self.last_split = int(self.n_input_rows/self.n_split_rows_length)
         self.index_list =  [n*self.n_split_rows_length for n in range(1,self.last_split+1)]
@@ -103,12 +94,7 @@ class Window_dataset():
             print('===> Passing df: ',df_i)
             df.reset_index(inplace=True, drop=True)
             self.make_sliding_window_df(df_i, df)
-            
-        # Run on subsets in parallel
-        #split_dataframes = list(enumerate(self.split_input_dataframes)) #[(df_i, df)...]
-        #with Pool(10) as p: 
-        #    p.map(self.make_sliding_window_df_parallel,split_dataframes)
-       
+        
         dt = round(time.time()-t0,1)
         print('Time to process: {0} s'.format(dt))
 
@@ -127,47 +113,26 @@ class Window_dataset():
         input_dataframe.reset_index(drop=True, inplace=True)
         return input_dataframe
 
-    def make_sliding_window_df_parallel(self, dfi_df_tuple):
-        df_i = dfi_df_tuple[0]
-        input_dataframe_part = dfi_df_tuple[1]
-            
-        # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
-        print('===> Passing df: ',df_i)
-        input_dataframe_part.reset_index(inplace=True, drop=True)
-        window_df = pd.DataFrame([], columns = self.window_columns)
-
-        # Fill Dataframe with windows from initial one
-        print('Making sliding window')
-        for index, row in input_dataframe_part.iterrows():
-            if (index%500==0):
-                print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-            row_df = self.make_sliding_window_row(row)
-            window_df = window_df.append(row_df)
-
-        window_df.reset_index(inplace=True, drop=True)
-
-        # Save pickles
-        self.save_pickle(window_df, self.out_dir, pickle_name)
-        return
 
     def make_sliding_window_df(self, df_i, input_dataframe_part):
         # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
+        
         print('Making sliding window')
         window_df = pd.DataFrame([], columns = self.window_columns)
         
         # Fill Dataframe with windows from initial one
         for index, row in input_dataframe_part.iterrows():
-            if (index%500==0):
+            if (index%100==0):
                 print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-                #print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
-                #ram_per = psutil.virtual_memory().percent
-                #print('Used RAM[%]: ',ram_per)
+                print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
+                ram_per = psutil.virtual_memory().percent
+                print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
             window_df = window_df.append(row_df)
 
         window_df.reset_index(inplace=True, drop=True)
 
-        # Save pickles
+        # Save picklescree
         self.save_pickle(window_df, self.out_dir, self.filestring+'_'+ str(df_i))
         return
 
@@ -212,7 +177,7 @@ class Window_dataset():
             except:
                 pass
         return row_df
-
+    
     def pickle_exists(self, out_dir, filestring):
         pickle_name = out_dir+'/'+ filestring+'_windows.pkl'
         if os.path.exists(pickle_name):

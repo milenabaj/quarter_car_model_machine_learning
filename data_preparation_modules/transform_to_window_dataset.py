@@ -91,7 +91,6 @@ class Window_dataset():
                 print('Pickle: ' + pickle_name + ' is present. Skipping.')
                 continue
             
-            sys.exit(0)
             print('===> Passing df: ',df_i)
             df.reset_index(inplace=True, drop=True)
             self.make_sliding_window_df(df_i, df)
