@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False, df_i_min = 0):
 
         # Initial processing time
         t0=time.time()
@@ -37,6 +37,7 @@ class Window_dataset():
             
         # Load pickle
         self.input_dataframe = self.load_pickle(input_dir, filestring)
+        print('Df_i min: {0}'.format(df_i_min))
         
         # Change dtypes for df to save RAM
         #print('Initial dtypes: ', self.input_dataframe.dtypes)
@@ -85,6 +86,9 @@ class Window_dataset():
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
             
+            if (df_i_min<=df_i<df_i_min+20) is False:
+                continue
+                
             # Skip if it exists
             pickle_name = self.filestring+'_'+ str(df_i)
             if self.pickle_exists(self.out_dir,  pickle_name):
@@ -124,9 +128,9 @@ class Window_dataset():
         for index, row in input_dataframe_part.iterrows():
             if (index%100==0):
                 print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-                print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
+                #print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
                 ram_per = psutil.virtual_memory().percent
-                print('Used RAM[%]: ',ram_per)
+                #print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
             window_df = window_df.append(row_df)
 
@@ -204,6 +208,8 @@ if __name__ == "__main__":
                         help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
     parser.add_argument('--window-size', default = 10, type=int,
                         help = 'Window size.')
+    parser.add_argument('--df-i-min', default = 0, type=int,
+                        help = 'Window size.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
@@ -215,10 +221,12 @@ if __name__ == "__main__":
     output_dir = args.output_dir_base
     is_test = args.is_test
     window_size = args.window_size
+    df_i_min = args.df_i_min
     
     # Print configuration
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
+    print('df_i_min: {0}'.format(df_i_min))
     
     #for filetype in ['train','valid','test']:
     for filetype in ['train']:
@@ -232,5 +240,5 @@ if __name__ == "__main__":
     
         # Process
         # ======#
-        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test)
+        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test, df_i_min = df_i_min)
 
