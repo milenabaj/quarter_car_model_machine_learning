@@ -69,9 +69,8 @@ class Window_dataset():
             pickle.dump(scaler, open(scaler_filename, 'wb'))
             
         # Scale speed 
-        if not speed:
-            speed = self.input_dataframe['speed'].to_numpy()
-            speed = speed.reshape(-1,1)
+        speed = self.input_dataframe['speed'].to_numpy()
+        speed = speed.reshape(-1,1)
         self.input_dataframe['scaled_speed'] = scaler.transform(speed)
         self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
