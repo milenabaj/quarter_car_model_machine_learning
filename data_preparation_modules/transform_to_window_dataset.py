@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = True):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, scale_speed = False):
 
         # Initial processing time
         t0=time.time()
@@ -84,6 +84,14 @@ class Window_dataset():
         print('Number of split dataframes: {0}'.format(self.n_splits))
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
+            
+            # Skip if it exists
+            pickle_name = self.filestring+'_'+ str(df_i)
+            if self.pickle_exists(self.out_dir,  pickle_name):
+                print('Pickle: ' + pickle_name + ' is present. Skipping.')
+                continue
+            
+            sys.exit(0)
             print('===> Passing df: ',df_i)
             df.reset_index(inplace=True, drop=True)
             self.make_sliding_window_df(df_i, df)
@@ -109,9 +117,10 @@ class Window_dataset():
 
     def make_sliding_window_df(self, df_i, input_dataframe_part):
         # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
+        
         print('Making sliding window')
         window_df = pd.DataFrame([], columns = self.window_columns)
-
+        
         # Fill Dataframe with windows from initial one
         for index, row in input_dataframe_part.iterrows():
             if (index%100==0):
@@ -169,7 +178,14 @@ class Window_dataset():
             except:
                 pass
         return row_df
-
+    
+    def pickle_exists(self, out_dir, filestring):
+        pickle_name = out_dir+'/'+ filestring+'_windows.pkl'
+        if os.path.exists(pickle_name):
+            return True
+        else:
+            return False
+    
     def save_pickle(self, df, out_dir, df_type):
         print('Saving {0} as pickle.'.format(df_type))
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
@@ -205,7 +221,8 @@ if __name__ == "__main__":
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
     
-    for filetype in ['train','valid','test']:
+    #for filetype in ['train','valid','test']:
+    for filetype in ['train']:
         print('Processing: {0}'.format(filetype))
         
         # Make output directory

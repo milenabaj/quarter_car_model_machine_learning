@@ -92,16 +92,22 @@ class Window_dataset():
         self.n_splits = len(self.split_input_dataframes)
         print('Number of split dataframes: {0}'.format(self.n_splits))
 
-        # Run on subsets in series
-        #for df_i, df in list(enumerate(self.split_input_dataframes)):
-        #    print('===> Passing df: ',df_i)
-        #    df.reset_index(inplace=True, drop=True)
-        #    self.make_sliding_window_df(df_i, df)
-        
+        for df_i, df in list(enumerate(self.split_input_dataframes)):
+            
+            # Skip if it exists
+            pickle_name = self.filestring+'_'+ str(df_i)
+            if self.pickle_exists(self.out_dir,  pickle_name):
+                print('Pickle: ' + pickle_name + ' is present. Skipping.')
+                continue
+            
+            print('===> Passing df: ',df_i)
+            df.reset_index(inplace=True, drop=True)
+            self.make_sliding_window_df(df_i, df)
+            
         # Run on subsets in parallel
-        split_dataframes = list(enumerate(self.split_input_dataframes)) #[(df_i, df)...]
-        with Pool(10) as p: 
-            p.map(self.make_sliding_window_df_parallel,split_dataframes)
+        #split_dataframes = list(enumerate(self.split_input_dataframes)) #[(df_i, df)...]
+        #with Pool(10) as p: 
+        #    p.map(self.make_sliding_window_df_parallel,split_dataframes)
        
         dt = round(time.time()-t0,1)
         print('Time to process: {0} s'.format(dt))
@@ -124,12 +130,6 @@ class Window_dataset():
     def make_sliding_window_df_parallel(self, dfi_df_tuple):
         df_i = dfi_df_tuple[0]
         input_dataframe_part = dfi_df_tuple[1]
-        
-        # Skip if it exists
-        pickle_name = self.filestring+'_'+ str(df_i)
-        if self.pickle_exists(self.out_dir,  pickle_name):
-            print('Pickle: ' + pickle_name + ' is present. Skipping.')
-            return
             
         # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
         print('===> Passing df: ',df_i)
@@ -141,9 +141,6 @@ class Window_dataset():
         for index, row in input_dataframe_part.iterrows():
             if (index%500==0):
                 print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-                #print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
-                #ram_per = psutil.virtual_memory().percent
-                #print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
             window_df = window_df.append(row_df)
 
@@ -157,7 +154,7 @@ class Window_dataset():
         # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
         print('Making sliding window')
         window_df = pd.DataFrame([], columns = self.window_columns)
-
+        
         # Fill Dataframe with windows from initial one
         for index, row in input_dataframe_part.iterrows():
             if (index%500==0):
@@ -216,8 +213,8 @@ class Window_dataset():
                 pass
         return row_df
 
-    def pickle_exists(self, out_dir, df_type):
-        pickle_name = out_dir+'/'+ df_type+'_windows.pkl'
+    def pickle_exists(self, out_dir, filestring):
+        pickle_name = out_dir+'/'+ filestring+'_windows.pkl'
         if os.path.exists(pickle_name):
             return True
         else:
