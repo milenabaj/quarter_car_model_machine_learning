@@ -100,7 +100,7 @@ class Window_dataset():
         
         # Run on subsets in parallel
         split_dataframes = list(enumerate(self.split_input_dataframes)) #[(df_i, df)...]
-        with Pool(30) as p: 
+        with Pool(10) as p: 
             p.map(self.make_sliding_window_df_parallel,split_dataframes)
        
         dt = round(time.time()-t0,1)
@@ -130,7 +130,6 @@ class Window_dataset():
         if self.pickle_exists(self.out_dir,  pickle_name):
             print('Pickle: ' + pickle_name + ' is present. Skipping.')
             return
-        
             
         # Making sliding window (each window: constant in distance, variable length, slide by 1 point)
         print('===> Passing df: ',df_i)
