@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [40,41], 
+    parser.add_argument('--speed_selection_range', default = [40,42], 
                         help = 'Select datasets for this speed only. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -60,9 +60,9 @@ if __name__ == "__main__":
 
 
     # Directories
-    parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-cluster'.format(git_repo_path),
+    parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
-    parser.add_argument('--out_dir', default = 'output',
+    parser.add_argument('--out_dir_base', default = 'results',
                         help='Output directory for trained models and results.')
     
     # Run on cluster
@@ -81,11 +81,12 @@ if __name__ == "__main__":
     do_test = args.do_test
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
-    out_dir = args.out_dir
+    out_dir_base = args.out_dir_base
     run_on_cluster = args.run_on_cluster #
     
     # Other settings
-    window_size = 2 #   IMPORTANT for plotting!
+    model_name = model_helpers.get_model_name(model_type)
+    window_size = 5 #   IMPORTANT 
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     batch_size = 24
     num_workers = 0 #0
@@ -100,24 +101,24 @@ if __name__ == "__main__":
     # If run on cluster
     if run_on_cluster:
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
-        out_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' 
+        out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
-        batch_size = 512
+        batch_size = 1024
         do_test = False
         n_epochs = 200
         n_pred_plots = 100
 
-    model_name = model_helpers.get_model_name(model_type)
-    
     # Set flags
     if do_train_with_early_stopping: 
         do_train=True
         
     # Create output directory    
     if speed_selection_range:
-        out_dir = '{0}_windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
+        out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
-        out_dir = '{0}_{1}_{2}'.format(out_dir, model_name, device)
+        out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
+    if not os.path.exists(out_dir_base):
+        os.makedirs(out_dir_base)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
         
@@ -129,15 +130,20 @@ if __name__ == "__main__":
     # ==== PREPARING DATA === #
     # ======================= #
     log.info('Starting preparing the data.\n')
-        
+       
+    # The data will be padded to max_length
     if not max_length:
          max_length_train = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
                                                           nrows_to_load = nrows_to_load)
-         max_length_valid = data_loaders.get_dataset_max_length(input_dir, 'valid', num_workers = 0,  speed_selection_range =  speed_selection_range, 
-                                                          nrows_to_load = nrows_to_load)
-         max_length = np.max([max_length_train, max_length_valid])
          
-    # Train data, # change max_length to be computed
+         if do_train_with_early_stopping:
+             max_length_valid = data_loaders.get_dataset_max_length(input_dir, 'valid', num_workers = 0,  speed_selection_range =  speed_selection_range, 
+                                                          nrows_to_load = nrows_to_load)
+             max_length = np.max([max_length_train, max_length_valid])
+         else:
+             max_length = max_length_train
+             
+    # Train data
     if do_train:
         train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range,  
@@ -201,7 +207,6 @@ if __name__ == "__main__":
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
     
-                
                 # Get prediction
                 if model_type=='lstm_encdec':
                     out = model(acc, targets)
@@ -209,7 +214,6 @@ if __name__ == "__main__":
                     speed = speed.reshape(1,acc.shape[1], 1).to(device)              
                     out = model(acc, speed, targets)
     
-                #sys.exit(0)
                 #log.debug(out.shape)
                 
                 # Compute loss
