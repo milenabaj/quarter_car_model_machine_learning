@@ -18,7 +18,7 @@ import psutil
 
 class Window_dataset():
 
-    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, df_i_min = 0):
+    def __init__(self, input_dir, filestring, win_size = 2, out_dir = '', is_test = False, df_min = None, df_max = None):
 
         # Initial processing time
         t0=time.time()
@@ -29,6 +29,8 @@ class Window_dataset():
         self.filestring = filestring
         self.win_size = win_size
         self.test = is_test
+        self.df_min = df_min
+        self.df_max = df_max
 
         # Create output dir for this filetype 
         if not os.path.exists(self.out_dir):
@@ -38,9 +40,7 @@ class Window_dataset():
         self.input_dataframe = self.load_pickle(input_dir, filestring)
         
         # Change dtypes for df to save RAM
-        #print('Initial dtypes: ', self.input_dataframe.dtypes)
         self.input_dataframe = self.input_dataframe.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16})
-        #sys.exit(0)
         
         # Remove rows with 0 points recorded, n_points[s] = 3.6*fs*defect_width/v[km/h]
         print('Is test: {0}'.format(is_test))
@@ -57,20 +57,18 @@ class Window_dataset():
         self.filestring = self.filestring
         self.input_dataframe = self.input_dataframe[self.input_columns]
 
-        # Get scaler
+        # Get scaler for speed
+        speed = self.input_dataframe['speed'].to_numpy()
+        speed = speed.reshape(-1,1)
         scaler_filename = '/'.join(self.out_dir.split('/')[0:-1])+'/train_scaler_speed.pt'
         if os.path.exists(scaler_filename):
             scaler = pickle.load(open(scaler_filename, 'rb'))
         elif self.filestring == 'train':
             print('Getting train scaler')
-            speed = self.input_dataframe['speed'].to_numpy()
-            speed = speed.reshape(-1,1)
             scaler = MinMaxScaler().fit(speed)
             pickle.dump(scaler, open(scaler_filename, 'wb'))
             
         # Scale speed 
-        speed = self.input_dataframe['speed'].to_numpy()
-        speed = speed.reshape(-1,1)
         self.input_dataframe['scaled_speed'] = scaler.transform(speed)
         self.input_dataframe = self.input_dataframe.astype({'scaled_speed':np.float16})
         
@@ -78,7 +76,7 @@ class Window_dataset():
         self.window_columns = [col for col in self.input_dataframe.columns if col not in ['distance','type','time']]
         self.window_columns.append('window_class')
         
-        # Split a very large input df into smaller ones to process part by part (fit into RAM more easily)
+        # Split a very large input df into smaller ones to process each one indepently (1 large windowed file is too large to fit into RAM)
         self.n_input_rows = self.input_dataframe.shape[0]
         self.last_split = int(self.n_input_rows/self.n_split_rows_length)
         self.index_list =  [n*self.n_split_rows_length for n in range(1,self.last_split+1)]
@@ -88,8 +86,10 @@ class Window_dataset():
 
         for df_i, df in list(enumerate(self.split_input_dataframes)):
             
-            if (df_i_min<=df_i<df_i_min+20) is False:
-                continue
+            # If asked, process only selected dataframe
+            if (self.df_min and self.df_max):
+                if (df_i_min<=df_i<df_i_min+) is False:
+                    continue
             
             # Skip if it exists
             pickle_name = self.filestring+'_'+ str(df_i)
@@ -130,9 +130,6 @@ class Window_dataset():
         for index, row in input_dataframe_part.iterrows():
             if (index%100==0):
                 print('Processing input df row: {0}/{1}'.format(index,input_dataframe_part.shape[0]))
-                #print('Window_df memory usage: ',window_df.info(verbose=False, memory_usage="deep"))
-                ram_per = psutil.virtual_memory().percent
-                #print('Used RAM[%]: ',ram_per)
             row_df = self.make_sliding_window_row(row)
             window_df = window_df.append(row_df)
 
@@ -179,7 +176,6 @@ class Window_dataset():
                         row_df.at[i,col] = row[col][i: window_end_index].astype(np.float16)
                     else:
                         row_df.at[i,col] = row[col] #float or string, just repeat
-                    #print('....Row_df memory usage: ',row_df.info(verbose=False, memory_usage="deep"))
             except:
                 pass
         return row_df
@@ -195,8 +191,6 @@ class Window_dataset():
         print('Saving {0} as pickle.'.format(df_type))
         pickle_name = out_dir+'/'+df_type+'_windows.pkl'
         df = df.astype({'defect_width': np.float16, 'defect_height': np.float16, 'speed':np.float16, 'scaled_speed':np.float16, 'window_class': np.int16})
-        #dtypes = df.dtypes
-        #print(dtypes)
         df.to_pickle(pickle_name)
         print('Wrote output file to: ',pickle_name)
         return
@@ -209,40 +203,41 @@ class Window_dataset():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Please provide command line arguments.')
-    parser.add_argument('--is_test', action='store_true', 
-                        help = 'If test is true, will process 100 rows only (use for testing purposes).') #store_true sets default to False 
-    parser.add_argument('--window_size', default = 5, type=int,
-                        help = 'Window size.')
+    parser.add_argument('--filetype', help = 'Choose between: train, valid or test.')
     parser.add_argument('--input_dir', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized',
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
-    parser.add_argument('--df_i_min', default = 0, type=int, help = 'df i minimum')
-
-
+    parser.add_argument('--window_size', default = 5, type=int,
+                        help = 'Window size.')
+    parser.add_argument('--df_min', default = 0, type=int, help = 'Dataframe counter min')
+    parser.add_argument('--df_max', default = 0, type=int, help = 'Dataframe counter max')
+    parser.add_argument('--is_test', action='store_true', 
+                        help = 'Use for testing purposes. If test is true, only 100 rows be processed.') #store_true sets default to False 
+ 
     # Parse arguments
     args = parser.parse_args()
     input_dir = args.input_dir
     output_dir = args.output_dir_base
-    is_test = args.is_test
+    filetype = args.filetype
     window_size = args.window_size
-    df_i_min = args.df_i_min
-    
+    df_min = args.df_min
+    df_max = args.df_max
+    is_test = args.is_test
+        
     # Print configuration
+    print('Processing: {0}'.format(filetype))
     print('Window_size: {0}'.format(window_size))
     print('Is test: {0}'.format(is_test))
     
-    #for filetype in ['train','valid','test']:
-    for filetype in ['train']:
-        print('Processing: {0}'.format(filetype))
-        
-        # Make output directory
-        out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir, window_size)
-        print('Output directory: {0}'.format(out_dir))
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
-    
-        # Process
-        # ======#
-        result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test, df_i_min = df_i_min)
+    # Make output directory
+    out_dir = '{0}/train-val-test-normalized-split-into-windows-size-{1}'.format(output_dir, window_size)
+    print('Output directory: {0}'.format(out_dir))
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    # Process
+    # ======#
+    result = Window_dataset(input_dir, filetype, win_size = window_size, out_dir = out_dir + '/'+str(filetype), is_test = is_test, 
+                            df_min = df_min, df_max = df_max)
 
