@@ -91,7 +91,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.0001
+    learning_rate= 0.001
     patience = 30
     n_pred_plots = 5
     save_results = True
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         model.to(device)
 
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
     
         criterion = nn.MSELoss()
         criterion_valid = nn.MSELoss()
