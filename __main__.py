@@ -44,7 +44,7 @@ if __name__ == "__main__":
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
     parser.add_argument('--speed_min', default = 40, type=int,
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
-    parser.add_argument('--speed_max', default = 42, type=int,
+    parser.add_argument('--speed_max', default = 40.5, type=int,
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -150,7 +150,9 @@ if __name__ == "__main__":
              max_length = np.max([max_length_train, max_length_valid])
          else:
              max_length = max_length_train
-             
+       
+    log.info('Max length: {0}'.format(max_length))
+    
     # Train data
     if do_train:
         train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
