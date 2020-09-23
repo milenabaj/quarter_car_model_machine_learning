@@ -42,8 +42,10 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_selection_range', default = [40,42], 
-                        help = 'Select datasets for this speed only. Pass None for no selection.') 
+    parser.add_argument('--speed_min', default = None, type=int,
+                        help = 'Filter datasets based on speed. Pass None for no selection.') 
+    parser.add_argument('--speed_max', default = None, type=int,
+                        help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
     
@@ -75,7 +77,7 @@ if __name__ == "__main__":
         sys.exit('Unknown model passed. Choose beteen lstm_encdec and lstm_encdec_with_speed.')  
     model_type = args.model_type
     max_length = args.max_length
-    speed_selection_range = args.speed_selection_range  # Use only data with speed in the selected range
+    speed_selection_range = [args.speed_min, args.speed_max] # Use only data with speed in the selected range
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     do_test = args.do_test
@@ -83,7 +85,7 @@ if __name__ == "__main__":
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
     run_on_cluster = args.run_on_cluster #
-    
+
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
     window_size = 5 #   IMPORTANT 
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     log.info('Speed filter: {0}'.format(speed_selection_range))
     log.info('Device: {0}'.format(device))
     log.info('====================\n')
-
+    
     # ==== PREPARING DATA === #
     # ======================= #
     log.info('Starting preparing the data.\n')
