@@ -91,7 +91,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.001
+    learning_rate= 0.01
     patience = 30
     n_pred_plots = 5
     save_results = True
@@ -124,8 +124,14 @@ if __name__ == "__main__":
         
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
-    log.info('Output dir is: {0}\n'.format(out_dir))
-
+    log.info('======= SETUP =======')
+    log.info('Input dir is: {0}'.format(input_dir))
+    log.info('Output dir is: {0}'.format(out_dir))
+    log.info('Model: {0}'.format(model_type))
+    log.info('Window size: {0}'.format(window_size))
+    log.info('Speed filter: {0}'.format(speed_selection_range))
+    log.info('Device: {0}'.format(device))
+    log.info('====================\n')
 
     # ==== PREPARING DATA === #
     # ======================= #
@@ -277,7 +283,7 @@ if __name__ == "__main__":
                 
             # Update LR
             lr = scheduler.get_lr()[0]
-            if lr>0.00001:
+            if lr>0.0001:
                     scheduler.step()
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.7f},  Valid Loss: {2:.7f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
