@@ -89,7 +89,10 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
         return df
       
         
-                   
+def print_dict(dict):
+    for key, value in dict.items():
+        print('{0}:{1}'.format(key, value))
+    return
     
 # Get logger for module
 log_vu = get_mogule_logger("various_utils")
