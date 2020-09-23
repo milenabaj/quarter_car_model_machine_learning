@@ -101,7 +101,8 @@ class Dataset(Dataset):
         # Get and pad inputs
         self.acc = self.pad_arrays(file.acceleration)
         self.speed = file.speed.to_numpy(dtype='float32')
-        
+        self.scaled_speed = file.scaled_speed.to_numpy(dtype='float32')
+            
         # Get and pad targets
         if self.acc_to_severity_seq2seq:
             self.severity = self.pad_arrays(file.severity)
@@ -118,10 +119,10 @@ class Dataset(Dataset):
     def __getitem__(self, index):
 
         if self.acc_to_severity_seq2seq:
-            return self.acc[index], self.speed[index], self.orig_length[index], self.severity[index]
+            return self.acc[index], self.scaled_speed[index], self.speed[index], self.orig_length[index], self.severity[index]
 
         else:
-            return self.acc[index], self.speed[index], self.orig_length[index], self.window_class[index]
+            return self.acc[index], self.scaled_speed[index], self.speed[index], self.orig_length[index], self.window_class[index]
 
     def __len__(self):
         return self.n_samples

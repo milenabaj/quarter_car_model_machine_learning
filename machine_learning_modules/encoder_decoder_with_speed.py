@@ -31,16 +31,14 @@ class Dense(nn.Module):
         
     def forward(self, inp):
         inp.to(self.device)
-        
-        out = self.linear(inp)
-        out = self.sigmoid(out) 
+        out = self.linear(inp)  
         
         return out
 
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
 
-    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 3, device = 'cuda'):
+    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 1, device = 'cuda'):
 
         '''
         : param input_size:     the number of features in the input X
@@ -91,7 +89,7 @@ class lstm_decoder(nn.Module):
 
     ''' Decodes hidden state output by encoder '''
 
-    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 3, device = 'cuda'):
+    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda'):
 
         '''
         : param input_size:     the number of features in the input X
@@ -137,7 +135,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq_with_speed(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 32, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda'):
 
         '''
@@ -160,7 +158,7 @@ class lstm_seq2seq_with_speed(nn.Module):
                                     device = self.device)
         
         # Dense network for speed
-        self.dense = Dense(1)
+        self.dense = Dense( device = self.device)
 
 
     def forward(self, input_batch, speed, target_batch = None):
@@ -188,17 +186,25 @@ class lstm_seq2seq_with_speed(nn.Module):
         self.encoder_output = encoder_output 
         self.encoder_hidden = encoder_hidden #[1, batch_size, n_features/hidden_size]
         
-
+        
+         # ======DENSE ======= #
+        speed = self.dense(speed)
+        speed = speed.reshape(1, batch_size, 1) # reshape for decoder
+        
+        
         # ====== DECODER ======= #
         # First decoder input: '0' (1, batch_size, 1)
         # First decoder hidden state: last encoder hidden state (batch_size, input_size)
         decoder_input = torch.zeros([1, batch_size, 1]).to(self.device)
-        decoder_hidden = (torch.cat((encoder_hidden[0], speed), dim=2), torch.cat((encoder_hidden[1], speed), dim=2))
+    
+        #print(encoder_hidden[0].shape)
+        #print(encoder_hidden[1].shape)
+        #print(speed.shape)
         
-        # To cuda
-        decoder_hidden[0].to(self.device)
-        decoder_hidden[1].to(self.device)
-        
+        decoder_hidden_0 = torch.cat((encoder_hidden[0], speed), dim=2).to(self.device)
+        decoder_hidden_1 = torch.cat((encoder_hidden[1], speed), dim=2).to(self.device)
+        decoder_hidden = (decoder_hidden_0,  decoder_hidden_1)
+
         # Outputs tensor
         outputs = torch.zeros([self.target_len,  batch_size, 1]).to(self.device)
 

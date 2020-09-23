@@ -123,7 +123,7 @@ class ModelInfo:
         criterion = nn.MSELoss()
         self.model.eval()
         with torch.no_grad():
-            for batch_index, (acc, speed,  orig_length, targets) in enumerate(dataloader):
+            for batch_index, (acc, scaled_speed, speed,  orig_length, targets) in enumerate(dataloader):
                 #log_vu.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
@@ -142,8 +142,8 @@ class ModelInfo:
                 if self.model_type=='lstm_encdec':
                     out = self.model(acc, targets)
                 elif self.model_type=='lstm_encdec_with_speed':
-                    speed = speed.reshape(1,acc.shape[1], 1).to(device)              
-                    out = self.model(acc, speed, targets)
+                    scaled_speed = scaled_speed.reshape(acc.shape[1], 1).to(device)              
+                    out = self.model(acc, scaled_speed, targets)
                         
                 predicted_targets.append(out.cpu().detach().numpy())
                 

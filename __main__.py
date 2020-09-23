@@ -42,9 +42,9 @@ if __name__ == "__main__":
     # Data preparation
     parser.add_argument('--max_length', default = None,
                         help = 'Max length of sequences in train datasets. If None, it will be computed from the datasets. This variable is used for padding.')  
-    parser.add_argument('--speed_min', default = None, type=int,
+    parser.add_argument('--speed_min', default = 40, type=int,
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
-    parser.add_argument('--speed_max', default = None, type=int,
+    parser.add_argument('--speed_max', default = 42, type=int,
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # Training and prediction
     parser.add_argument('--do_train', default = True,
                         help = 'Train using the train dataset.')
-    parser.add_argument('--model_type', default = 'lstm_encdec',
+    parser.add_argument('--model_type', default = 'lstm_encdec_with_speed',
                         help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         do_train=True
         
     # Create output directory    
-    if speed_selection_range:
+    if args.speed_min and args.speed_max:
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
@@ -205,7 +205,7 @@ if __name__ == "__main__":
             log.info('=== Training..')
             train_batch_results = model_helpers.BatchResults()
             model.train()
-            for batch_index, (acc, speed, orig_length, targets) in enumerate(train_dataloader):
+            for batch_index, (acc, scaled_speed, speed, orig_length, targets) in enumerate(train_dataloader):
                 #log.debug('Batch_index: {0}'.format(batch_index))
     
                 # Put into the correct dimensions for LSTM
@@ -219,9 +219,9 @@ if __name__ == "__main__":
                 if model_type=='lstm_encdec':
                     out = model(acc, targets)
                 elif model_type=='lstm_encdec_with_speed':
-                    speed = speed.reshape(1,acc.shape[1], 1).to(device)              
-                    out = model(acc, speed, targets)
-    
+                    scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
+                    out = model(acc, scaled_speed, targets)
+   
                 #log.debug(out.shape)
                 
                 # Compute loss
@@ -245,7 +245,7 @@ if __name__ == "__main__":
                 valid_batch_results = model_helpers.BatchResults()
                 model.eval()
                 with torch.no_grad():
-                    for batch_index, (acc, speed, orig_length, targets) in enumerate(train_dataloader):
+                    for batch_index, (acc, scaled_speed, speed, orig_length, targets) in enumerate(train_dataloader):
                         #log.debug('Batch_index: {0}'.format(batch_index))
             
                         # Put into the correct dimensions for LSTM
@@ -261,8 +261,8 @@ if __name__ == "__main__":
                         if model_type=='lstm_encdec':
                             out = model(acc, targets)
                         elif model_type=='lstm_encdec_with_speed':
-                            speed = speed.reshape(1,acc.shape[1], 1).to(device)             
-                            out = model(acc, speed, targets)
+                            scaled_speed = scaled_speed.reshape(acc.shape[1], 1).to(device)              
+                            out = model(acc, scaled_speed, targets)
                         
                         # Compute loss
                         valid_loss = criterion(out, targets)
@@ -297,7 +297,7 @@ if __name__ == "__main__":
 if model_type=='lstm_encdec':
     onnx_input = (acc)
 elif model_type=='lstm_encdec_with_speed':            
-    onnx_input = (acc, speed) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure
+    onnx_input = (acc, scaled_speed) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure
     
 # Best Model (saved as .pth and .onnx)
 best_model_info = model_helpers.ModelInfo(model, early_stopping = early_stopping, model_type = model_type, onnx_input = onnx_input, out_dir = out_dir)

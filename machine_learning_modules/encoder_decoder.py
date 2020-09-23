@@ -24,7 +24,7 @@ ed_log = get_mogule_logger("encoder_decoder")
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
 
-    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 3, device = 'cuda'):
+    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 1, device = 'cuda'):
 
         '''
         : param input_size:     the number of features in the input X
@@ -75,7 +75,7 @@ class lstm_decoder(nn.Module):
 
     ''' Decodes hidden state output by encoder '''
 
-    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 3, device = 'cuda'):
+    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda'):
 
         '''
         : param input_size:     the number of features in the input X
@@ -121,7 +121,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 32, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda'):
 
         '''
