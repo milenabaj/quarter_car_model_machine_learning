@@ -116,7 +116,7 @@ class Dataset(Dataset):
 
     def pad_arrays(self, arrays):
         arrays = arrays.to_numpy()
-        padded_list = [ np.pad(arr,  (0,(self.max_length-arr.shape[0])),  mode='constant') for arr in arrays ] # padded at the end of each array
+        padded_list = [ np.pad(arr,  ((self.max_length-arr.shape[0]),0),  mode='constant') for arr in arrays ] # padded at the end of each array
         return np.array(padded_list, dtype=np.float32)
         # padding helps classification, as it stores signal lenght (like velocity)
 
