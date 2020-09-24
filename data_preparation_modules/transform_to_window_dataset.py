@@ -208,7 +208,7 @@ if __name__ == "__main__":
                         help = 'Input directory.')
     parser.add_argument('--output_dir_base', default = '/dtu-compute/mibaj/Golden-car-simulation-August-2020',
                         help='Directory base where a new directory with output files will be created.')
-    parser.add_argument('--window_size', default = 5, type=int,
+    parser.add_argument('--window_size', default = 10, type=int,
                         help = 'Window size.')
     parser.add_argument('--df_min', default = 0, type=int, help = 'Dataframe counter min')
     parser.add_argument('--df_max', default = 0, type=int, help = 'Dataframe counter max')
