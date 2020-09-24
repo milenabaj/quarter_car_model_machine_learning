@@ -107,7 +107,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 1024
         do_test = False
-        n_epochs = 100
+        n_epochs = 50
         n_pred_plots = 100
 
     # Set flags
@@ -141,16 +141,9 @@ if __name__ == "__main__":
        
     # The data will be padded to max_length
     if not max_length:
-         max_length_train = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
+         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
                                                           nrows_to_load = nrows_to_load)
          
-         if do_train_with_early_stopping:
-             max_length_valid = data_loaders.get_dataset_max_length(input_dir, 'valid', num_workers = 0,  speed_selection_range =  speed_selection_range, 
-                                                          nrows_to_load = nrows_to_load)
-             max_length = np.max([max_length_train, max_length_valid])
-         else:
-             max_length = max_length_train
-       
     log.info('Max length: {0}'.format(max_length))
     
     # Train data
@@ -170,8 +163,6 @@ if __name__ == "__main__":
         test_datasets, test_dataloader =  data_loaders.get_prepared_data(input_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
                                                                            nrows_to_load = nrows_to_load)
-        
-    sys.exit(0)
     
     log.info('Data preparing done.\n')
 

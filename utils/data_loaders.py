@@ -28,22 +28,26 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
     Get max length of sequences in input datasets.
     '''
     dlog.info('===> Getting max lenght for datasets in: {0}'.format(input_dir))
-    glob_max_length = 0
+
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
         file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load)
         
         if file.empty:
             continue #this selection
         
-        # This file max lenght
-        orig_lengths = file.acceleration.apply(lambda row: row.shape[0]).to_numpy(dtype='int')
-        #print('orig_lengths', orig_lengths[0])
-        this_file_max_length = np.max(orig_lengths)
+        # Min speed
+        if speed_selection_range:
+            min_speed = speed_selection_range[0]
+        else:
+            min_speed = 2
         
-        if this_file_max_length>glob_max_length:
-            glob_max_length = this_file_max_length
-    dlog.info('Max length is: {0}\n'.format(glob_max_length))
-    return glob_max_length
+        # Get acc length for min speed
+        if file.acceleration[file.speed == min_speed].empty:
+            continue
+        
+        max_length = file.acceleration[file.speed == min_speed].iloc[0].shape[0]
+        return max_length
+        
   
     
 # Functions used for getting the data #

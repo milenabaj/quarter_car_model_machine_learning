@@ -15,6 +15,10 @@ train_filename = '/Users/milena/quarter_car_model_machine_learning/data/Golden-c
 with open(train_filename,'rb') as f:
     df = pickle.load(f)
     
-c = df.defect_height.value_counts()
-c.sort_index(inplace=True)
-print(df.defect_height.value_counts())
+h = df.defect_height.value_counts()
+h.sort_index(inplace=True)
+
+w = df.defect_width.value_counts()
+w.sort_values(inplace=True)
+
+df.speed.min()
