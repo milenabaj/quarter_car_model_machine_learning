@@ -53,11 +53,11 @@ if __name__ == "__main__":
     # Training and prediction
     parser.add_argument('--do_train', default = True,
                         help = 'Train using the train dataset.')
-    parser.add_argument('--model_type', default = 'lstm_encdec_with_speed',
+    parser.add_argument('--model_type', default = 'lstm_encdec',
                         help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
-    parser.add_argument('--do_test', default = False,
+    parser.add_argument('--do_test', action='store_true',
                         help = 'Test on test dataset.')
 
 
@@ -170,6 +170,8 @@ if __name__ == "__main__":
         test_datasets, test_dataloader =  data_loaders.get_prepared_data(input_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
                                                                            nrows_to_load = nrows_to_load)
+        
+    sys.exit(0)
     
     log.info('Data preparing done.\n')
 

@@ -75,6 +75,12 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
     log_vu.info('Loading {0} rows. Speed selection range: {1}'.format(row_max, speed_selection_range))
     with open(filename, "rb") as f:
         df = pickle.load(f)
+        
+        # Remove very wide patches
+        def_cond = df.defect_width<=1000
+        df = df[def_cond]
+        
+        # Select on speed
         if speed_selection_range:
             speed_min = speed_selection_range[0]
             speed_max = speed_selection_range[1]
@@ -82,6 +88,8 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
             #cond = (df.speed >= speed_min) & (df.speed <= speed_max)
             df = df[cond]
             df.reset_index(inplace=True, drop=True)
+            
+        # Columns to load
         if use_cols:
             df =  df[use_cols].iloc[row_min:row_max]
         else:
