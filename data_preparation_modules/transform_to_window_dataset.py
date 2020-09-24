@@ -49,7 +49,10 @@ class Window_dataset():
             self.n_split_rows_length = 20
         else:
             self.input_dataframe = self.remove_samples_with_zero_counts(self.input_dataframe)
-            self.n_split_rows_length = 1000
+            if self.win_size==10:
+                self.n_split_rows_length = 500
+            else:
+                self.n_split_rows_length = 1000
 
         # Take only needed columns
         self.input_columns = ['time','distance','speed', 'acceleration', 'severity', 'type', 'defect_width', 'defect_height']
