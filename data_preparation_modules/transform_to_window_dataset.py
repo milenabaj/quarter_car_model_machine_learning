@@ -91,7 +91,7 @@ class Window_dataset():
             
             # If asked, process only selected dataframe
             if (self.df_min and self.df_max):
-                if (df_i_min<=df_i<df_i_min+) is False:
+                if (self.df_min<=df_i<self.df_max) is False:
                     continue
             
             # Skip if it exists
