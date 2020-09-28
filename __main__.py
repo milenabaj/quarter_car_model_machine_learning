@@ -126,7 +126,7 @@ if __name__ == "__main__":
         os.makedirs(out_dir)
         
     # Logger
-    log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir, log_level = logging.INFO)
+    log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
     log.info('======= SETUP =======')
     log.info('Input dir is: {0}'.format(input_dir))
     log.info('Output dir is: {0}'.format(out_dir))

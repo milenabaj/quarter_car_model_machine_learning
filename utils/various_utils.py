@@ -43,7 +43,7 @@ def get_mogule_logger(logger_name, root_logger_name='Main'):
         
     return log_ed
 
-def get_main_logger(logger_name = 'Main', log_filename = 'info.log', log_level = logging.DEBUG, 
+def get_main_logger(logger_name = 'Main', log_filename = 'info.log', log_level = logging.INFO, 
                     log_file_dir = '.'):
     import logging
     
