@@ -21,7 +21,7 @@ from torch import optim
 from torch.optim import lr_scheduler
 from onnx import onnx
 from utils import data_loaders
-from machine_learning_modules import encoder_decoder, encoder_decoder_with_speed
+from machine_learning_modules import encoder_decoder, encoder_decoder_with_attention, encoder_decoder_with_speed
 from utils import various_utils, plot_utils, model_helpers
 
 # Device
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     # Training and prediction
     parser.add_argument('--do_train', default = True,
                         help = 'Train using the train dataset.')
-    parser.add_argument('--model_type', default = 'lstm_encdec',
-                        help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
+    parser.add_argument('--model_type', default = 'lstm_encdec_with_attn',
+                        help = 'Choose between lstm_encdec(acceleration sequence -> severity sequence), lstm_encdec_with_attn (with attention) and lstm_encdec_with_speed(acceleration sequence + speed -> severity sequence).')
     parser.add_argument('--do_train_with_early_stopping', default = True,
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
     parser.add_argument('--do_test', action='store_true',
@@ -68,13 +68,13 @@ if __name__ == "__main__":
                         help='Output directory for trained models and results.')
     
     # Run on cluster
-    parser.add_argument('--run_on_cluster', default = True,
+    parser.add_argument('--run_on_cluster', action='store_true', 
                         help='Overwrite settings for running on cluster.')
  
     # Parse arguments
     args = parser.parse_args()
-    if args.model_type not in ['lstm_encdec', 'lstm_encdec_with_speed']:
-        sys.exit('Unknown model passed. Choose beteen lstm_encdec and lstm_encdec_with_speed.')  
+    if args.model_type not in ['lstm_encdec', 'lstm_encdec_with_attn', 'lstm_encdec_with_speed']:
+        sys.exit('Unknown model passed. Choose beteen lstm_encdec, lstm_encdec_with_attn and lstm_encdec_with_speed.')  
     model_type = args.model_type
     max_length = args.max_length
     speed_selection_range = [args.speed_min, args.speed_max] # Use only data with speed in the selected range
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
-    run_on_cluster = args.run_on_cluster #
+    run_on_cluster = args.run_on_cluster # s
 
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     # ======================= #
     # If run on cluster
     if run_on_cluster:
+        window_size = 10 #   IMPORTANT 
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
@@ -166,6 +167,7 @@ if __name__ == "__main__":
     
     log.info('Data preparing done.\n')
 
+
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
@@ -173,6 +175,8 @@ if __name__ == "__main__":
         # Model
         if model_type=='lstm_encdec':
             model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
+        elif model_type=='lstm_encdec_with_attn':
+            model = encoder_decoder_with_attention.lstm_seq2seq_with_attn(device = device, target_len = max_length, use_teacher_forcing = True)
         elif model_type=='lstm_encdec_with_speed':
             model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True)  
         model.to(device)
@@ -206,17 +210,21 @@ if __name__ == "__main__":
                 # Put into the correct dimensions for LSTM
                 acc = acc.permute(1,0) 
                 acc = acc.unsqueeze(2).to(device)
-    
+        
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
-    
-                # Get prediction
-                if model_type=='lstm_encdec':
+                
+                if model_type=='lstm_encdec' :
                     out = model(acc, targets)
+                    
+                elif model_type=='lstm_encdec_with_attn':       
+                    out = model(acc, targets)
+                    
                 elif model_type=='lstm_encdec_with_speed':
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                     out = model(acc, scaled_speed, targets)
-   
+                    
+                sys.exit(0)
                 #log.debug(out.shape)
                 
                 # Compute loss
@@ -242,23 +250,23 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     for batch_index, (acc, scaled_speed, speed, orig_length, targets) in enumerate(train_dataloader):
                         #log.debug('Batch_index: {0}'.format(batch_index))
-            
                         # Put into the correct dimensions for LSTM
                         acc = acc.permute(1,0) 
                         acc = acc.unsqueeze(2).to(device)
-            
+                
                         targets = targets.permute(1,0)
                         targets = targets.unsqueeze(2).to(device)
-            
-                        #log.debug('acc shape: {0}, speed shape: {1}'.format(acc.shape, speed.shape))
                         
-                        # Get prediction
-                        if model_type=='lstm_encdec':
+                        if model_type=='lstm_encdec' :
                             out = model(acc, targets)
+                            
+                        elif model_type=='lstm_encdec_with_attn':       
+                            out = model(acc, targets)
+                            
                         elif model_type=='lstm_encdec_with_speed':
-                            scaled_speed = scaled_speed.reshape(acc.shape[1], 1).to(device)              
+                            scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                             out = model(acc, scaled_speed, targets)
-                        
+                                   
                         # Compute loss
                         valid_loss = criterion(out, targets)
                         valid_batch_results.loss_total += valid_loss.item()

@@ -118,7 +118,7 @@ class lstm_decoder(nn.Module):
 
 
 
-class lstm_seq2seq(nn.Module):
+class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
     def __init__(self, input_size  = 1, hidden_size = 128, target_len = 1000, 
@@ -129,7 +129,7 @@ class lstm_seq2seq(nn.Module):
         : param hidden_size:    the number of features in the hidden state h
         '''
 
-        super(lstm_seq2seq, self).__init__()
+        super(lstm_seq2seq_with_attn, self).__init__()
 
         self.input_size = input_size
         self.hidden_size = hidden_size

@@ -124,32 +124,35 @@ class ModelInfo:
         self.model.eval()
         with torch.no_grad():
             for batch_index, (acc, scaled_speed, speed,  orig_length, targets) in enumerate(dataloader):
-                #log_vu.debug('Batch_index: {0}'.format(batch_index))
-    
+                log_vu.debug('Batch_index: {0}'.format(batch_index))
+                
                 # Put into the correct dimensions for LSTM
-                acc = acc.permute(1,0)
+                acc = acc.permute(1,0) 
                 acc = acc.unsqueeze(2).to(device)
-    
+        
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
+                
+                if model_type=='lstm_encdec' :
+                    out = model(acc, targets)
+                    
+                elif model_type=='lstm_encdec_with_attn':       
+                    out = model(acc, targets)
+                    
+                elif model_type=='lstm_encdec_with_speed':
+                    scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
+                    out = model(acc, scaled_speed, targets)
+                                         
+                predicted_targets.append(out.cpu().detach().numpy())                    
                 true_targets.append(targets.cpu().detach().numpy())
-                
-                # Save speeds and original lengths
-                speeds.append(speed.cpu().detach().numpy())
-                orig_lengths.append(orig_length.cpu().detach().numpy())
-                
-                # Get prediction
-                if self.model_type=='lstm_encdec':
-                    out = self.model(acc, targets)
-                elif self.model_type=='lstm_encdec_with_speed':
-                    scaled_speed = scaled_speed.reshape(acc.shape[1], 1).to(device)              
-                    out = self.model(acc, scaled_speed, targets)
-                        
-                predicted_targets.append(out.cpu().detach().numpy())
                 
                 # Compute loss
                 loss = criterion(out, targets)
                 losses.append(loss.item())
+                
+                # Save speeds and original lengths
+                speeds.append(speed.cpu().detach().numpy())
+                orig_lengths.append(orig_length.cpu().detach().numpy())
                 
                 # Update n_batches
                 if batch_index == n_batches-1: # batch_index starts at 0
@@ -161,6 +164,9 @@ class ModelInfo:
 def get_model_name(model_type):
     if model_type=='lstm_encdec':
         return 'LSTM_encoder_decoder_acc'
+    elif model_type=='lstm_seq2seq_with_attn':
+        return 'LSTM_encoder_decoder_acc_attn'
     elif model_type=='lstm_encdec_with_speed':
         return 'LSTM_encoder_decoder_accspeed'
+
     

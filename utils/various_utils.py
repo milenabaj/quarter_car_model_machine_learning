@@ -32,14 +32,14 @@ def get_mogule_logger(logger_name, root_logger_name='Main'):
     formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     
     # Create stream handler
-    ch_ed = logging.StreamHandler()
-    ch_ed.setFormatter(formatter)
-    log_ed.addHandler(ch_ed)
+    #ch_ed = logging.StreamHandler()
+    #ch_ed.setFormatter(formatter)
+    #log_ed.addHandler(ch_ed)
 
     # Get the file handler from the root logger and add it to the module logger
     for h in list(root_logger.handlers):
-        if isinstance(h,logging.FileHandler):
-            log_ed.addHandler(h)
+        #if isinstance(h,logging.FileHandler):
+        log_ed.addHandler(h)
         
     return log_ed
 
