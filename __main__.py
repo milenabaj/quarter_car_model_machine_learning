@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
     parser.add_argument('--do_test', action='store_true',
                         help = 'Test on test dataset.')
-    parser.add_argument('--window-size', default = 5, type=int,
+    parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
 
     # Directories
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.01
+    learning_rate= 0.001
     patience = 30
     n_pred_plots = 5
     save_results = True
@@ -115,11 +115,13 @@ if __name__ == "__main__":
     if do_train_with_early_stopping: 
         do_train=True
         
-    # Create output directory    
+    # Name output directory    
     if args.speed_min and args.speed_max:
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
+    out = out_dir+'_narrow'
+    # Create output directory      
     if not os.path.exists(out_dir_base):
         os.makedirs(out_dir_base)
     if not os.path.exists(out_dir):
