@@ -88,7 +88,7 @@ class lstm_decoder(nn.Module):
 
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
                             num_layers = num_layers)
-        self.linear = nn.Linear(hidden_size, output_size)
+        self.linear = nn.Linear(2*hidden_size, output_size)
 
     def forward(self, x_input, hidden_states, encoder_output):
 
@@ -114,16 +114,15 @@ class lstm_decoder(nn.Module):
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
         
-        # Concat context vector and lstm out
-        sys.exit(0)
+        # Concat. context vector and lstm out along the hidden state dimension
+        self.cat = torch.cat( (self.context_vector.permute(2,0,1),self.lstm_out), dim=2)
         
-        # Feed the concat vector into the linear layer
-        self.lstm_out = self.lstm_out.squeeze(0) #-> [batch size, hidden dim]
-        #print('Decoder forward - linear input: ',lstm_out.shape)
-        prediction = self.linear(self.lstm_out)
+        # Feed the concat. vector into the linear layer
+        self.cat = self.cat.squeeze(0) #-> [batch size, hidden dim]
+        prediction = self.linear(self.cat)
         #print('Decoder forward - prediction: ',prediction.shape)
         
-        return prediction, self.hidden
+        return prediction, self.hidden, self.attn_weights
 
 
 
@@ -188,32 +187,39 @@ class lstm_seq2seq_with_attn(nn.Module):
 
         # Initialize vector to store the decoder output
         self.outputs = torch.zeros([self.target_len,  batch_size, 1]).to(self.device)
+        
+        #Initialize vector to store the attentions weights (output timestep, input timestep, batch_size)
+        self.attention_weights = torch.zeros([self.target_len, self.target_len, batch_size, ]).to(self.device)
 
         # Decoder output
         if self.use_teacher_forcing:
             # Teacher forcing: Feed the target as the next input
             for t in range(self.target_len):
-                #print('Seq2Seq forward - decoder input: ',decoder_input.shape)
-                #print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
-                self.decoder_output, self.decoder_hidden = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output)
-                self.outputs[t] = self.decoder_output
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output)
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
-                #print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
-                #print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
+               
+                # Save attention weights
+                self.attn_weights_ts = self.attn_weights_ts.view(batch_size,self.target_len).permute(1,0)
+                self.attention_weights[t] = self.attn_weights_ts
+                
+                # Save output
+                self.outputs[t] = self.decoder_output
+
 
         else:
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):
-                #print('Seq2Seq forward - decoder input: ',decoder_input.shape)
-                #print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
-                self.decoder_output, self.decoder_hidden = self.decoder(self.decoder_input, self.decoder_hidden)
-                self.outputs[t] = self.decoder_output
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output)
                 self.decoder_input = self.decoder_output.unsqueeze(0).to(self.device)
-                #print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
-                #print('Seq2Seq forward after - decoder hidden input: ',decoder_hidden[0].shape)
+                            
+                # Save attention weights
+                self.attn_weights_ts = self.attn_weights_ts.view(batch_size,self.target_len).permute(1,0)
+                self.attention_weights[t] = self.attn_weights_ts
+                
+                # Save Output
+                self.outputs[t] = self.decoder_output
+
 
         return self.outputs
 
 
-# Q: decoder, K,V: encoder
-# K is the positional encoding, V the word od the encoder, Q the previous word from the decoder

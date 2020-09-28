@@ -224,7 +224,6 @@ if __name__ == "__main__":
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                     out = model(acc, scaled_speed, targets)
                     
-                sys.exit(0)
                 #log.debug(out.shape)
                 
                 # Compute loss
@@ -297,7 +296,7 @@ if __name__ == "__main__":
 # ======== BEST MODEL PREDICTIONS ========= #
 # ========================================= #
 # Onnx input
-if model_type=='lstm_encdec':
+if model_type=='lstm_encdec' or model_type=='lstm_encdec_with_attn':
     onnx_input = (acc)
 elif model_type=='lstm_encdec_with_speed':            
     onnx_input = (acc, scaled_speed) #saved is without teacher forcing, output is not needed for prediction only the shape is needed for model structure

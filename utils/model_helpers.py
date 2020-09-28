@@ -133,15 +133,15 @@ class ModelInfo:
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
                 
-                if model_type=='lstm_encdec' :
-                    out = model(acc, targets)
+                if self.model_type=='lstm_encdec' :
+                    out = self.model(acc, targets)
                     
-                elif model_type=='lstm_encdec_with_attn':       
-                    out = model(acc, targets)
+                elif self.model_type=='lstm_encdec_with_attn':       
+                    out = self.model(acc, targets)
                     
-                elif model_type=='lstm_encdec_with_speed':
+                elif self.model_type=='lstm_encdec_with_speed':
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
-                    out = model(acc, scaled_speed, targets)
+                    out = self.model(acc, scaled_speed, targets)
                                          
                 predicted_targets.append(out.cpu().detach().numpy())                    
                 true_targets.append(targets.cpu().detach().numpy())
@@ -164,7 +164,7 @@ class ModelInfo:
 def get_model_name(model_type):
     if model_type=='lstm_encdec':
         return 'LSTM_encoder_decoder_acc'
-    elif model_type=='lstm_seq2seq_with_attn':
+    elif model_type=='lstm_encdec_with_attn':
         return 'LSTM_encoder_decoder_acc_attn'
     elif model_type=='lstm_encdec_with_speed':
         return 'LSTM_encoder_decoder_accspeed'
