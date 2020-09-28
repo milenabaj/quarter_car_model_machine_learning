@@ -109,7 +109,7 @@ class lstm_decoder(nn.Module):
         
         # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
         self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
-        self.attn_weights =F.softmax(self.scores, dim=1)
+        self.attn_weights = F.softmax(self.scores, dim=1)
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)

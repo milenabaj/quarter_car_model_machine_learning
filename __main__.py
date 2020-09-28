@@ -59,7 +59,8 @@ if __name__ == "__main__":
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
     parser.add_argument('--do_test', action='store_true',
                         help = 'Test on test dataset.')
-
+    parser.add_argument('--window-size', default = 5, type=int,
+                        help = 'Window size.') 
 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
@@ -81,6 +82,7 @@ if __name__ == "__main__":
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     do_test = args.do_test
+    window_size = args.window_size #   IMPORTANT 
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
@@ -88,7 +90,6 @@ if __name__ == "__main__":
 
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
-    window_size = 5 #   IMPORTANT 
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     batch_size = 24
     num_workers = 0 #0
@@ -102,7 +103,6 @@ if __name__ == "__main__":
     # ======================= #
     # If run on cluster
     if run_on_cluster:
-        window_size = 10 #   IMPORTANT 
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
@@ -124,6 +124,10 @@ if __name__ == "__main__":
         os.makedirs(out_dir_base)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+        
+    # Max length set
+    if window_size==5 and args.speed_min==40:
+        max_length=136
         
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
@@ -167,7 +171,7 @@ if __name__ == "__main__":
     
     log.info('Data preparing done.\n')
 
-
+    sys.exit(0)
     # ==== TRAINING ==== #
     # ================== #
     if do_train:

@@ -80,6 +80,10 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
         def_cond = df.defect_width<=1000
         df = df[def_cond]
         
+        # Select on very narrow geometry
+        geom_cond = (df.defect_height==-15) & (df.defect_width==375)
+        df = df[geom_cond]
+        
         # Select on speed
         if speed_selection_range:
             speed_min = speed_selection_range[0]
