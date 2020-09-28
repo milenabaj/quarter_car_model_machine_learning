@@ -1,12 +1,7 @@
 """
 @author: Milena Bajic (DTU Compute)
-
-encoder-decoder model for SAME series:
-https://github.com/lkulowski/LSTM_encoder_decoder/blob/master/code/lstm_encoder_decoder.py
-https://github.com/pytorch/tutorials/blob/master/intermediate_source/seq2seq_translation_tutorial.py
-attn:
-https://buomsoo-kim.github.io/attention/2020/04/27/Attention-mechanism-21.md/
-
+Nice explanations of attention:
+https://blog.floydhub.com/attention-mechanism/
 """
 import sys
 import torch
@@ -95,11 +90,11 @@ class lstm_decoder(nn.Module):
                             num_layers = num_layers)
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, x_input, encoder_hidden_states):
+    def forward(self, x_input, hidden_states, encoder_output):
 
         '''
         : param x_input:                    should be 2D (batch_size, input_size)
-        : param encoder_hidden_states:      hidden states
+        : param  hidden_states:      hidden states
         : return output, hidden:            output gives all the hidden states in the sequence;
         :                                   hidden gives the hidden state and cell state for the last
         :                                   element in the sequence
@@ -107,13 +102,27 @@ class lstm_decoder(nn.Module):
         '''
         #x_input = x_input.unsqueeze(0) #(batch_size, input_features) -> (1, batch_size, input_features))
         #print('Decoder forward - lstm input: ',x_input.shape)
+        
+        # LSTM
         x_input.to(self.device)
-        lstm_out, self.hidden = self.lstm(x_input, encoder_hidden_states)
-        #print('Decoder forward - lstm_out: ',lstm_out.shape)
-        lstm_out = lstm_out.squeeze(0) #-> [batch size, hidden dim]
+        self.lstm_out, self.hidden = self.lstm(x_input, hidden_states)
+        
+        # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
+        self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
+        self.attn_weights =F.softmax(self.scores, dim=1)
+        
+         # Context vector
+        self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
+        
+        # Concat context vector and lstm out
+        sys.exit(0)
+        
+        # Feed the concat vector into the linear layer
+        self.lstm_out = self.lstm_out.squeeze(0) #-> [batch size, hidden dim]
         #print('Decoder forward - linear input: ',lstm_out.shape)
-        prediction = self.linear(lstm_out)
+        prediction = self.linear(self.lstm_out)
         #print('Decoder forward - prediction: ',prediction.shape)
+        
         return prediction, self.hidden
 
 
@@ -121,7 +130,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 128, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 12, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda'):
 
         '''
@@ -186,7 +195,7 @@ class lstm_seq2seq_with_attn(nn.Module):
             for t in range(self.target_len):
                 #print('Seq2Seq forward - decoder input: ',decoder_input.shape)
                 #print('Seq2Seq forward - decoder hidden input: ',decoder_hidden[0].shape)
-                self.decoder_output, self.decoder_hidden = self.decoder(self.decoder_input, self.decoder_hidden)
+                self.decoder_output, self.decoder_hidden = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output)
                 self.outputs[t] = self.decoder_output
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
                 #print('Seq2Seq forward after - decoder input: ',decoder_input.shape)
