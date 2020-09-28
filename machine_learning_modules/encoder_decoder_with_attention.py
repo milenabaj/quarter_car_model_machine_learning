@@ -36,7 +36,7 @@ class lstm_encoder(nn.Module):
 
         # define LSTM layer
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
-                            num_layers = num_layers)
+                            num_layers = num_layers, bidirectional = True)
 
 
     def forward(self, x_input):
@@ -87,8 +87,11 @@ class lstm_decoder(nn.Module):
         self.device = device
 
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
-                            num_layers = num_layers)
-        self.linear = nn.Linear(2*hidden_size, output_size)
+                            num_layers = num_layers, bidirectional = True)
+        if self.lstm.bidirectional:
+            self.linear = nn.Linear(4*hidden_size, output_size)
+        else:
+            self.linear = nn.Linear(2*hidden_size, output_size)
 
     def forward(self, x_input, hidden_states, encoder_output):
 
@@ -109,7 +112,7 @@ class lstm_decoder(nn.Module):
         
         # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
         self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
-        self.attn_weights = F.softmax(self.scores, dim=1)
+        self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)

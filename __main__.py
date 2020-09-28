@@ -120,7 +120,8 @@ if __name__ == "__main__":
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out = out_dir+'_narrow'
+    out = out_dir+'_narrow_bi'
+    
     # Create output directory      
     if not os.path.exists(out_dir_base):
         os.makedirs(out_dir_base)
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     
     log.info('Data preparing done.\n')
 
-    sys.exit(0)
+
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
