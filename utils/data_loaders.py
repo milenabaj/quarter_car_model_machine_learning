@@ -56,6 +56,8 @@ def get_prepared_data(input_dir, filetype, acc_to_severity_seq2seq, batch_size, 
     datasets = get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = num_workers, max_length =  max_length,  speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load) 
     merged_dataset = ConcatDataset(datasets)
     merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
+    n_samples = sum(merged_dataloader.dataset.cumulative_sizes)
+    dlog.info('{0} samples.\n'.format(n_samples))
     return datasets, merged_dataloader
 
 
@@ -71,7 +73,6 @@ def get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = 0, 
             continue #this selection
         dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq, max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load)
         data.append(dataset)
-    dlog.info('\n')
     return data
 
 
