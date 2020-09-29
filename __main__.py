@@ -142,6 +142,7 @@ if __name__ == "__main__":
     log.info('Speed filter: {0}'.format(speed_selection_range))
     log.info('Device: {0}'.format(device))
     log.info('====================\n')
+    # 7650024
     
     # ==== PREPARING DATA === #
     # ======================= #
