@@ -70,7 +70,7 @@ class lstm_decoder(nn.Module):
 
     ''' Decodes hidden state output by encoder '''
 
-    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda'):
+    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda', attention_type='general'):
 
         '''
         : param input_size:     the number of features in the input X
@@ -83,15 +83,25 @@ class lstm_decoder(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
         self.hidden_size = hidden_size
+        self.attention_type = attention_type #general or dot
         self.num_layers = num_layers
         self.device = device
 
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
                             num_layers = num_layers, bidirectional = True)
+    
+        # Attention Layer
+        if self.attention_type =='general' and self.lstm.bidirectional: 
+            self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=False)
+        elif self.attention_type =='general' :
+            self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=False)
+                   
+        # Final LSTM to Linear Layer
         if self.lstm.bidirectional:
-            self.linear = nn.Linear(4*hidden_size, output_size)
+            self.linear = nn.Linear(4*hidden_size, output_size) #*2 beacuse of concat vector, *2 because of bider. LSTM
         else:
-            self.linear = nn.Linear(2*hidden_size, output_size)
+            self.linear = nn.Linear(2*hidden_size, output_size) # *2 because of concat vector
+        
 
     def forward(self, x_input, hidden_states, encoder_output):
 
@@ -111,7 +121,14 @@ class lstm_decoder(nn.Module):
         self.lstm_out, self.hidden = self.lstm(x_input, hidden_states)
         
         # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
-        self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
+        if self.attention_type =='dot':
+            self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
+        elif self.attention_type =='general':
+            # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix
+             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
+             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
+            
+        # Attention weights after softmax
         self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         
          # Context vector
@@ -119,11 +136,11 @@ class lstm_decoder(nn.Module):
         
         # Concat. context vector and lstm out along the hidden state dimension
         self.cat = torch.cat( (self.context_vector.permute(2,0,1),self.lstm_out), dim=2)
-        
-        # Feed the concat. vector into the linear layer
         self.cat = self.cat.squeeze(0) #-> [batch size, hidden dim]
+        
+        # Final Linear layer
         prediction = self.linear(self.cat)
-        #print('Decoder forward - prediction: ',prediction.shape)
+
         
         return prediction, self.hidden, self.attn_weights
 
@@ -132,7 +149,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 128, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda'):
 
         '''

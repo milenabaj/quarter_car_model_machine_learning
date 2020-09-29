@@ -106,9 +106,9 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
-        batch_size = 1024
+        batch_size = 2028
         do_test = False
-        n_epochs = 50
+        n_epochs = 200
         n_pred_plots = 100
 
     # Set flags
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out_dir = '{0}_narrow_bid'.format(out_dir)
+    out_dir = '{0}_narrow2020_bid_genattn'.format(out_dir)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
@@ -293,7 +293,7 @@ if __name__ == "__main__":
                 
             # Update LR
             lr = scheduler.get_lr()[0]
-            if lr>0.0001:
+            if lr>0.00001:
                     scheduler.step()
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.7f},  Valid Loss: {2:.7f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
