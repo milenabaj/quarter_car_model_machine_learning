@@ -70,7 +70,8 @@ def get_main_logger(logger_name = 'Main', log_filename = 'info.log', log_level =
 
 
 
-def load_pickle_full_path(filename, use_cols = None, speed_selection_range = None, row_min = 0, row_max = -1):
+def load_pickle_full_path(filename, use_cols = None, speed_selection_range = None, row_min = 0, row_max = -1,
+                          defect_height_selection = None, defect_width_selection = None):
     log_vu.info('Loading {0} rows. Speed selection range: {1}'.format(row_max, speed_selection_range))
     with open(filename, "rb") as f:
         df = pickle.load(f)
@@ -79,8 +80,20 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
         def_cond = df.defect_width<=1000
         df = df[def_cond]
         
-        # Select on very narrow geometry
-        geom_cond = ( df.defect_height.between(-20,-20) & (df.defect_width.between(0,40)) )
+        # Select on defect geometry
+        log_vu.info('Defect height selection: {0}'.format(defect_height_selection))
+        log_vu.info('Defect width selection: {0}'.format(defect_width_selection))
+        geom_cond = None
+        if defect_height_selection and not defect_width_selection:
+            geom_cond  = df.defect_height.between(defect_height_selection[0],defect_height_selection[1])
+        elif defect_width_selection and not defect_height_selection:
+            geom_cond  = df.defect_width.between(defect_width_selection[0], defect_width_selection[1])
+        elif defect_height_selection and defect_width_selection:
+            geom_cond = ( df.defect_height.between(defect_height_selection[0],defect_height_selection[1]) & df.defect_width.between(defect_width_selection[0], defect_width_selection[1]) )
+        else:
+            geom_cond = None
+        if geom_cond is not None:
+            df = df[geom_cond]
 
         # Select on speed
         if speed_selection_range:

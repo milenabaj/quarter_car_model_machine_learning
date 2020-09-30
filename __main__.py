@@ -100,6 +100,8 @@ if __name__ == "__main__":
     patience = 30
     n_pred_plots = 5
     save_results = True
+    defect_height_selection = [-200,200]
+    defect_width_selection = [0,300]
         
     # ======== SET ========= #
     # ======================= #
@@ -108,6 +110,8 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
+        defect_height_selection = [-100,100]
+        defect_width_selection = [0,200]
         batch_size = 2028
         do_test = False
         n_epochs = 100
@@ -139,10 +143,12 @@ if __name__ == "__main__":
     log.info('======= SETUP =======')
     log.info('Input dir is: {0}'.format(input_dir))
     log.info('Output dir is: {0}'.format(out_dir))
-    log.info('Model: {0}'.format(model_type))
-    log.info('Window size: {0}'.format(window_size))
-    log.info('Speed filter: {0}'.format(speed_selection_range))
     log.info('Device: {0}'.format(device))
+    log.info('Model type: {0}'.format(model_type))
+    log.info('Window size: {0}'.format(window_size))
+    log.info('Speed selection: {0}'.format(speed_selection_range))
+    log.info('Defect width selection: {0}'.format(defect_width_selection)) 
+    log.info('Defect height selection: {0}'.format(defect_height_selection)) 
     log.info('====================\n')
     # 7650024 train
     
@@ -151,34 +157,27 @@ if __name__ == "__main__":
     # ======================= #
     log.info('Starting preparing the data.\n')
        
-    # The data will be padded to max_length
-    if not max_length:
-         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
-                                                          nrows_to_load = nrows_to_load)
-         
-    log.info('Max length: {0}'.format(max_length))
-    sys.exit(0)
     # Train data
     if do_train:
-        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range,  
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+        
 
     # Valid data
     if do_train_with_early_stopping:
-        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
         
     # Test data
     if do_test:
-        test_datasets, test_dataloader =  data_loaders.get_prepared_data(input_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        test_dataset, test_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
     
     log.info('Data preparing done.\n')
-
-
+    
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
