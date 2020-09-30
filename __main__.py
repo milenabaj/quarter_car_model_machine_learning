@@ -49,6 +49,14 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--speed_max', default = 40.5, type=int,
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
+    parser.add_argument('--w_min', default = 0, type=int,
+                        help = 'Defect width minimum') 
+    parser.add_argument('--w_max', default = 500, type=int,
+                        help = 'Defect width maximum') 
+    parser.add_argument('--h_min', default = 0, type=int,
+                        help = 'Defect heigh minimum') 
+    parser.add_argument('--h_max', default = 500, type=int,
+                        help = 'Defect heigh maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
     
@@ -64,7 +72,8 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
-
+    parser.add_argument('--attn', default = 'general',
+                        help = 'Attention type to use in the model. Choose between dot and general.') 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
@@ -82,6 +91,9 @@ if __name__ == "__main__":
     model_type = args.model_type
     max_length = args.max_length
     speed_selection_range = [args.speed_min, args.speed_max] # Use only data with speed in the selected range
+    defect_height_selection = [args.h_min, args.h_max]
+    defect_width_selection = [args.w_min, args.w_max]
+    attn = args.attn
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     do_test = args.do_test
@@ -101,8 +113,6 @@ if __name__ == "__main__":
     patience = 20
     n_pred_plots = 5
     save_results = True
-    defect_height_selection = [-200,200]
-    defect_width_selection = [0,300]
         
     # ======== SET ========= #
     # ======================= #
@@ -111,8 +121,6 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        defect_height_selection = [-20,20]
-        defect_width_selection = [100,200]
         batch_size = 512
         do_test = False
         n_epochs = 50
@@ -124,10 +132,15 @@ if __name__ == "__main__":
         
     # Name output directory    
     if args.speed_min and args.speed_max:
-        out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
+        out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}_attn_{6}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device, attn)
     else:
-        out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out_dir = '{0}_0-300_teacherforcing_decreaing'.format(out_dir)
+        out_dir = '{0}/windowsize_{1}_{2}_{3}_attn_{4}'.format(out_dir_base, window_size, model_name, device, attn)
+    
+    if defect_height_selection:
+        out_dir = '{0}_defheight_{1}_{2}'.format(out_dir,defect_height_selection[0],defect_height_selection[1])
+    if defect_width_selection:
+       out_dir = '{0}_defhwidth_{1}_{2}'.format(out_dir,defect_width_selection[0],defect_width_selection[1])    
+       
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
@@ -152,7 +165,6 @@ if __name__ == "__main__":
     log.info('Defect height selection: {0}'.format(defect_height_selection)) 
     log.info('====================\n')
     # 7650024 train
-    
     
     # ==== PREPARING DATA === #
     # ======================= #
@@ -183,7 +195,7 @@ if __name__ == "__main__":
         if model_type=='lstm_encdec':
             model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
         elif model_type=='lstm_encdec_with_attn':
-            model = encoder_decoder_with_attention.lstm_seq2seq_with_attn(device = device, target_len = max_length, use_teacher_forcing = True)
+            model = encoder_decoder_with_attention.lstm_seq2seq_with_attn(device = device, target_len = max_length, use_teacher_forcing = True, attn = attn)
         elif model_type=='lstm_encdec_with_speed':
             model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True)  
         model.to(device)
@@ -234,7 +246,7 @@ if __name__ == "__main__":
                     out = model(acc, scaled_speed, targets)
                     
                 #log.debug(out.shape)
-                #sys.exit(0)
+   
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
@@ -252,7 +264,7 @@ if __name__ == "__main__":
                 
             # Save train results per this epoch
             train_results.store_results_per_epoch(train_batch_results)
-            
+      
             # Reduce teacher forcing ratio for the next epoch:
             if teacher_forcing_ratio >=0.02:
                 teacher_forcing_ratio = teacher_forcing_ratio-0.02

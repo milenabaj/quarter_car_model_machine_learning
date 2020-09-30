@@ -31,7 +31,32 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 sys.path.append(os.getcwd()) 
 sys.path.append(os.getenv("HOME"))
 sys.path.append('/home/mibaj/') 
-   
+  
+def plot_all(a,s):
+    plt.figure(figsize=(5,5))
+    #plt.ylim((0,1))
+    plt.rc('font', size=20)
+    plt.plot(a, label = 'Acceleration')
+    plt.plot(s, label = 'Severity')
+    plt.legend()
+
+    # https://blog.floydhub.com/attention-mechanism/
+    
+    # Dot attention
+    dot = s*a
+    dot_t = torch.FloatTensor(dot)
+    dot_attn = torch.softmax(dot_t,dim=0)
+    cat = np.tanh(s+a)
+    concat_attn = torch.softmax(torch.FloatTensor(cat),dim=0)
+    
+    plt.figure(figsize=(5,5))
+    plt.ylim((0.007,0.008))
+    plt.title('Attention scores')
+    plt.plot(dot_attn, label='Dot attention')
+    plt.plot(concat_attn, label='Concat attention')
+    plt.legend()
+  
+    
 #logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 if __name__ == "__main__":
 
@@ -111,7 +136,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        defect_height_selection = [-5,5]
+        defect_height_selection = [0,5]
         defect_width_selection = [0,10]
         batch_size = 512
         do_test = False
@@ -164,24 +189,14 @@ if __name__ == "__main__":
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
         
 
+    
+  
     df=train_dataset.datasets[0].df
-    a = df.acceleration[95]
+        
+    # Pothole
+    a = df.acceleration[95] #    defect_height_selection = [-200,200], defect_width_selection = [0,300]
     s=df.severity[95]
-    points = np.array(list(range(0,len(a))))
-    plt.figure(figsize=(5,5))
-    plt.rc('font', size=20)
-    plt.plot(a, label = 'Acceleration')
-    plt.plot(s, label = 'Severity')
-    plt.legend()
-
-    # https://blog.floydhub.com/attention-mechanism/
-    
-    # Dot attention
-    dot = s*a
-    dot_t = torch.FloatTensor(dot)
-    dot_attn = torch.softmax(dot_t, dim=0)
-    
-    plt.figure(figsize=(5,5))
-    plt.title('Attention scores')
-    plt.plot(dot_attn, label='Dot attention')
-    plt.legend()
+    plot_all(a,s)
+        
+    # if severity is negative -> minimum attention at the most important part -> reverse the sign in drops
+    # solution-> make holes dips in att. scores
