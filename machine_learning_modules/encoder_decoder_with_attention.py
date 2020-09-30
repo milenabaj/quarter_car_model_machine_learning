@@ -142,7 +142,6 @@ class lstm_decoder(nn.Module):
         
         # Final Linear layer
         prediction = self.linear(self.cat)
-
         
         return prediction, self.hidden, self.attn_weights
 
@@ -152,7 +151,7 @@ class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
     def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
-                 use_teacher_forcing = True, device = 'cuda', bidirectional = True):
+                 use_teacher_forcing = False, device = 'cuda', bidirectional = True):
 
         '''
         : param input_size:     the number of expected features in the input X
@@ -234,7 +233,7 @@ class lstm_seq2seq_with_attn(nn.Module):
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):
                 self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output)
-                self.decoder_input = self.decoder_output.unsqueeze(0).to(self.device)
+                self.decoder_input = self.decoder_output.unsqueeze(0).to(self.device) # current prediction will be the input in the next timestep
                             
                 # Save attention weights
                 self.attn_weights_ts = self.attn_weights_ts.view(batch_size,self.target_len).permute(1,0)

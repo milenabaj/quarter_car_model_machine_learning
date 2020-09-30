@@ -126,7 +126,7 @@ if __name__ == "__main__":
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out_dir = '{0}_narrow2020_bid_genattn'.format(out_dir)
+    out_dir = '{0}_narrow2020_bid_genattn_teacherforcing_off'.format(out_dir)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
@@ -247,6 +247,9 @@ if __name__ == "__main__":
         
                 # Update n_batches
                 train_batch_results.n_batches += 1
+                
+                #d = model.decoder
+                #e = model.encoder
                 #sys.exit(0)
             # Save train results per this epoch
             train_results.store_results_per_epoch(train_batch_results)
