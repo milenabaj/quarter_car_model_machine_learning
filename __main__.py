@@ -121,7 +121,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        batch_size = 512
+        batch_size = 1024
         do_test = False
         n_epochs = 50
         n_pred_plots = 100
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         teacher_forcing_ratio = 0.6
         for epoch_index in range(0, n_epochs):
             log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
-            print('Teacher forcing ratio: ',teacher_forcing_ratio)
+            log.debug('Teacher forcing ratio: {0:.2f}',round(teacher_forcing_ratio))
             #if epoch_index%100==0:
             #    log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
     
