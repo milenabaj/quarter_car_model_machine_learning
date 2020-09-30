@@ -4,6 +4,7 @@ Nice explanations of attention:
 https://blog.floydhub.com/attention-mechanism/
 """
 import sys
+import logging
 import torch
 from torch.autograd import Variable
 import torch.nn as nn

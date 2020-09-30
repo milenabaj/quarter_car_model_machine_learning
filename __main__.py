@@ -5,6 +5,7 @@ Main script.
 """
 
 import sys,os, glob, time
+import logging
 from copy import deepcopy
 import argparse
 import subprocess
@@ -30,6 +31,7 @@ sys.path.append(os.getcwd())
 sys.path.append(os.getenv("HOME"))
 sys.path.append('/home/mibaj/') 
    
+#logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 if __name__ == "__main__":
 
     # === SETTINGS === #
@@ -142,7 +144,8 @@ if __name__ == "__main__":
     log.info('Speed filter: {0}'.format(speed_selection_range))
     log.info('Device: {0}'.format(device))
     log.info('====================\n')
-    # 7650024
+    # 7650024 train
+    
     
     # ==== PREPARING DATA === #
     # ======================= #
@@ -154,7 +157,7 @@ if __name__ == "__main__":
                                                           nrows_to_load = nrows_to_load)
          
     log.info('Max length: {0}'.format(max_length))
-    
+    sys.exit(0)
     # Train data
     if do_train:
         train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
@@ -174,6 +177,7 @@ if __name__ == "__main__":
                                                                            nrows_to_load = nrows_to_load)
     
     log.info('Data preparing done.\n')
+
 
     # ==== TRAINING ==== #
     # ================== #

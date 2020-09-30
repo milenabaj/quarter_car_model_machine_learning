@@ -4,7 +4,8 @@ Various useful utils.
 @author: Milena Bajic (DTU Compute)
 """
 
-import sys,os,logging
+import sys,os
+import logging
 import numpy as np
 from copy import deepcopy
 import pickle
@@ -15,7 +16,6 @@ import torch.nn.functional as F
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
  
 def get_mogule_logger(logger_name, root_logger_name='Main'):
-    import logging
     
     # Create module logger
     log_ed = logging.getLogger(logger_name)
@@ -45,7 +45,6 @@ def get_mogule_logger(logger_name, root_logger_name='Main'):
 
 def get_main_logger(logger_name = 'Main', log_filename = 'info.log', log_level = logging.INFO, 
                     log_file_dir = '.'):
-    import logging
     
     #Create logger
     log = logging.getLogger(logger_name)
