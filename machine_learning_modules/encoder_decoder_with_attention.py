@@ -20,7 +20,7 @@ ed_log = get_mogule_logger("encoder_decoder")
 class lstm_encoder(nn.Module):
     ''' Encodes time-series sequence '''
 
-    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 1, device = 'cuda'):
+    def __init__(self, input_size = 1, hidden_size = 64, num_layers = 1, device = 'cuda',bidirectional = True):
 
         '''
         : param input_size:     the number of features in the input X
@@ -34,10 +34,10 @@ class lstm_encoder(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.device = device
+        self.bidirectional = bidirectional 
 
         # define LSTM layer
-        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
-                            num_layers = num_layers, bidirectional = True)
+        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
 
 
     def forward(self, x_input):
@@ -71,7 +71,7 @@ class lstm_decoder(nn.Module):
 
     ''' Decodes hidden state output by encoder '''
 
-    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda', attention_type='general'):
+    def __init__(self, input_size = 32, hidden_size = 64, output_size = 1, num_layers = 1, device = 'cuda', attention_type='general', bidirectional  = True):
 
         '''
         : param input_size:     the number of features in the input X
@@ -87,10 +87,11 @@ class lstm_decoder(nn.Module):
         self.attention_type = attention_type #general or dot
         self.num_layers = num_layers
         self.device = device
+        self.bidirectional = bidirectional 
 
-        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size,
-                            num_layers = num_layers, bidirectional = True)
-    
+        # LSTM Layer
+        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
+        
         # Attention Layer
         if self.attention_type =='general' and self.lstm.bidirectional: 
             self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=False)
@@ -126,8 +127,8 @@ class lstm_decoder(nn.Module):
             self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
         elif self.attention_type =='general':
             # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix
-             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
-             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
+            decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
+            self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
         # Attention weights after softmax
         self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
@@ -151,7 +152,7 @@ class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
     def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
-                 use_teacher_forcing = True, device = 'cuda'):
+                 use_teacher_forcing = True, device = 'cuda', bidirectional = True):
 
         '''
         : param input_size:     the number of expected features in the input X
@@ -165,13 +166,15 @@ class lstm_seq2seq_with_attn(nn.Module):
         self.target_len = target_len
         self.use_teacher_forcing = use_teacher_forcing
         self.device = device
+        
+        # Bidectional LSTM
+        self.bidirectional = bidirectional
 
-        self.encoder = lstm_encoder(device = self.device, hidden_size = self.hidden_size)
+        self.encoder = lstm_encoder(device = self.device, hidden_size = self.hidden_size, bidirectional = self.bidirectional)
         
         # decoder input: target sequence, features only taken as input hidden state
-        self.decoder = lstm_decoder(input_size = input_size, hidden_size = self.hidden_size, 
-                                    device = self.device)
-
+        self.decoder = lstm_decoder(input_size = input_size, hidden_size = self.hidden_size, device = self.device, bidirectional = self.bidirectional)
+        
 
     def forward(self, input_batch, target_batch = None):
 

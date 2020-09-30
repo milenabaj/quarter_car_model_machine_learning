@@ -97,7 +97,7 @@ if __name__ == "__main__":
     num_workers = 0 #0
     n_epochs = 1
     learning_rate= 0.001
-    patience = 30
+    patience = 20
     n_pred_plots = 5
     save_results = True
     defect_height_selection = [-200,200]
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         
                 # Update n_batches
                 train_batch_results.n_batches += 1
-                
+                #sys.exit(0)
             # Save train results per this epoch
             train_results.store_results_per_epoch(train_batch_results)
                       

@@ -53,7 +53,7 @@ class EarlyStopping:
         is_better = False
         
         # Check is this epoch is better
-        if valid_loss< self.min_valid_loss:
+        if valid_loss < self.min_valid_loss:
             self.min_valid_loss = valid_loss
             is_better = True
             self.best_epoch = curr_epoch
