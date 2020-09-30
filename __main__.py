@@ -109,7 +109,7 @@ if __name__ == "__main__":
     if run_on_cluster:
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
-        nrows_to_load = 1000
+        nrows_to_load = 10000
         defect_height_selection = [-5,5]
         defect_width_selection = [0,10]
         batch_size = 512

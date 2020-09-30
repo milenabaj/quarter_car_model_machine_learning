@@ -160,15 +160,13 @@ if __name__ == "__main__":
     # Train data
     if do_train:
         train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length, speed_selection_range =  speed_selection_range,  
-                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
         
 
     # Valid data
     if do_train_with_early_stopping:
         valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
         
     # Test data
     if do_test:
@@ -178,6 +176,7 @@ if __name__ == "__main__":
     
     log.info('Data preparing done.\n')
 
+    #sys.exit(0)
 
     # === Train and validate ===#
     # ==========================#
