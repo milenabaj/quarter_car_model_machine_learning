@@ -88,7 +88,7 @@ if __name__ == "__main__":
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
-    run_on_cluster = args.run_on_cluster # s
+    run_on_cluster = args.run_on_cluster 
 
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     if run_on_cluster:
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
-        nrows_to_load = 1000
+        nrows_to_load = 10000
         defect_height_selection = [-5,5]
         defect_width_selection = [0,10]
         batch_size = 512
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out_dir = '{0}_narrow2020_bid_genattn_teacherforcing_off'.format(out_dir)
+    out_dir = '{0}_narrow2020_bid_genattn_teacherforcing_reducing'.format(out_dir)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):

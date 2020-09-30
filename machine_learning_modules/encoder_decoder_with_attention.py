@@ -151,7 +151,7 @@ class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
     def __init__(self, input_size  = 1, hidden_size = 64, target_len = 1000, 
-                 use_teacher_forcing = False, device = 'cuda', bidirectional = True):
+                 use_teacher_forcing = True, device = 'cuda', bidirectional = True):
 
         '''
         : param input_size:     the number of expected features in the input X
@@ -175,7 +175,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         self.decoder = lstm_decoder(input_size = input_size, hidden_size = self.hidden_size, device = self.device, bidirectional = self.bidirectional)
         
 
-    def forward(self, input_batch, target_batch = None):
+    def forward(self, input_batch, target_batch = None, teacher_forcing_ratio = None):
 
         '''
         : param input_batch:                    should be 2D (batch_size, input_size)
@@ -214,9 +214,14 @@ class lstm_seq2seq_with_attn(nn.Module):
         #Initialize vector to store the attentions weights (output timestep, input timestep, batch_size)
         self.attention_weights = torch.zeros([self.target_len, self.target_len, batch_size, ]).to(self.device)
 
-        # Decoder output
+        # If asked for teaching forcing, use it in teacher_forcing_ratio% of cases
+        use_teacher_forcing = False
         if self.use_teacher_forcing:
-            # Teacher forcing: Feed the target as the next input
+            if random.random() < teacher_forcing_ratio:
+                use_teacher_forcing = True
+        
+        # Teacher forcing: Feed the target as the next input
+        if use_teacher_forcing:
             for t in range(self.target_len):
                 self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output)
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
@@ -227,8 +232,7 @@ class lstm_seq2seq_with_attn(nn.Module):
                 
                 # Save output
                 self.outputs[t] = self.decoder_output
-
-
+                
         else:
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):

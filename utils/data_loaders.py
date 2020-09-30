@@ -66,8 +66,10 @@ def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, bat
     dlog.info('Max length: {0}'.format(max_length))
 
     # Filename with the prepared data for this filetype
-    out_filename = '{0}/{1}_dataset_speed_{2}_{3}_defwidth_{4}_{5}_defheight_{6}_{7}.pth'.format(out_dir,filetype, speed_selection_range[0], speed_selection_range[1],
-                                                                                                  defect_width_selection[0], defect_width_selection[1],defect_height_selection[0],defect_height_selection[1])                                                                                                                                                                                          
+    nrows = nrows_to_load if nrows_to_load!=-1 else 'all'
+    out_filename = '{0}/{1}_dataset_speed_{2}_{3}_defwidth_{4}_{5}_defheight_{6}_{7}_nrows_{8}.pth'.format(out_dir,filetype, speed_selection_range[0], speed_selection_range[1],
+                                                                                                  defect_width_selection[0], defect_width_selection[1],defect_height_selection[0],
+                                                                                                  defect_height_selection[1],  )                                                                                                                                                                                          
     # Load if exists, else create
     if os.path.exists(out_filename):
         merged_dataset = torch.load(out_filename) 
