@@ -111,8 +111,8 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        defect_height_selection = [-5,5]
-        defect_width_selection = [0,10]
+        defect_height_selection = [-20,20]
+        defect_width_selection = [100,200]
         batch_size = 512
         do_test = False
         n_epochs = 50
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
-    out_dir = '{0}_narrow2020_bid_genattn_teacherforcing_off'.format(out_dir)
+    out_dir = '{0}_0-300_teacherforcing_decreaing'.format(out_dir)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
