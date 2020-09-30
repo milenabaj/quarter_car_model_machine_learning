@@ -234,7 +234,7 @@ if __name__ == "__main__":
                     out = model(acc, scaled_speed, targets)
                     
                 #log.debug(out.shape)
-                sys.exit(0)
+                #sys.exit(0)
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
