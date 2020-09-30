@@ -121,7 +121,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        batch_size = 256
+        batch_size = 512
         do_test = False
         n_epochs = 50
         n_pred_plots = 100
