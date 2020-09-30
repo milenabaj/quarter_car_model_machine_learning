@@ -80,7 +80,7 @@ def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, bat
         torch.save(merged_dataset, out_filename)
         
     # Create the dataloader 
-    merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
+    merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers, shuffle=True)
     n_samples = sum(merged_dataloader.dataset.cumulative_sizes)
     dlog.info('{0} samples.\n'.format(n_samples))
           
