@@ -6,6 +6,7 @@ https://blog.floydhub.com/attention-mechanism/
 import sys
 import logging
 import torch
+import random
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F

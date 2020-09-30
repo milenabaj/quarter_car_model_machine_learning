@@ -14,6 +14,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import torch.nn as nn
@@ -174,6 +175,7 @@ if __name__ == "__main__":
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
     
     log.info('Data preparing done.\n')
+    
 
     # === Train and validate ===#
     # ==========================#
@@ -232,7 +234,7 @@ if __name__ == "__main__":
                     out = model(acc, scaled_speed, targets)
                     
                 #log.debug(out.shape)
-                
+                sys.exit(0)
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()

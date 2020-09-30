@@ -13,6 +13,7 @@ from multiprocessing import cpu_count
 import pickle
 import pandas as pd
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
@@ -171,8 +172,7 @@ if __name__ == "__main__":
     # Test data
     if do_test:
         test_dataset, test_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
     
     log.info('Data preparing done.\n')
 
