@@ -5,6 +5,7 @@ Main script.
 """
 
 import sys,os, glob, time
+import logging
 from copy import deepcopy
 import argparse
 import subprocess
@@ -30,6 +31,7 @@ sys.path.append(os.getcwd())
 sys.path.append(os.getenv("HOME"))
 sys.path.append('/home/mibaj/') 
    
+#logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 if __name__ == "__main__":
 
     # === SETTINGS === #
@@ -59,7 +61,8 @@ if __name__ == "__main__":
                         help = 'Do early stopping using the valid dataset (train flag will be set to true by default).')
     parser.add_argument('--do_test', action='store_true',
                         help = 'Test on test dataset.')
-
+    parser.add_argument('--window_size', default = 5, type=int,
+                        help = 'Window size.') 
 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
@@ -81,6 +84,7 @@ if __name__ == "__main__":
     do_train = args.do_train
     do_train_with_early_stopping = args.do_train_with_early_stopping
     do_test = args.do_test
+    window_size = args.window_size #   IMPORTANT 
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
@@ -88,86 +92,92 @@ if __name__ == "__main__":
 
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
-    window_size = 5 #   IMPORTANT 
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.01
-    patience = 30
+    learning_rate= 0.001
+    patience = 20
     n_pred_plots = 5
     save_results = True
+    defect_height_selection = [-200,200]
+    defect_width_selection = [0,300]
         
     # ======== SET ========= #
     # ======================= #
     # If run on cluster
     if run_on_cluster:
-        window_size = 5 #   IMPORTANT 
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = -1
-        batch_size = 1024
+        defect_height_selection = [-100,100]
+        defect_width_selection = [0,200]
+        batch_size = 2028
         do_test = False
-        n_epochs = 50
+        n_epochs = 100
         n_pred_plots = 100
 
     # Set flags
     if do_train_with_early_stopping: 
         do_train=True
         
-    # Create output directory    
+    # Name output directory    
     if args.speed_min and args.speed_max:
         out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device)
     else:
         out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, device)
+    out_dir = '{0}_narrow2020_bid_genattn_teacherforcing_off'.format(out_dir)
+    
+    # Create output directory      
     if not os.path.exists(out_dir_base):
         os.makedirs(out_dir_base)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+        
+    # Max length set
+    if window_size==5 and args.speed_min==40:
+        max_length=136
         
     # Logger
     log = various_utils.get_main_logger('Main', log_filename = 'info.log', log_file_dir = out_dir)
     log.info('======= SETUP =======')
     log.info('Input dir is: {0}'.format(input_dir))
     log.info('Output dir is: {0}'.format(out_dir))
-    log.info('Model: {0}'.format(model_type))
-    log.info('Window size: {0}'.format(window_size))
-    log.info('Speed filter: {0}'.format(speed_selection_range))
     log.info('Device: {0}'.format(device))
+    log.info('Model type: {0}'.format(model_type))
+    log.info('Window size: {0}'.format(window_size))
+    log.info('Speed selection: {0}'.format(speed_selection_range))
+    log.info('Defect width selection: {0}'.format(defect_width_selection)) 
+    log.info('Defect height selection: {0}'.format(defect_height_selection)) 
     log.info('====================\n')
+    # 7650024 train
+    
     
     # ==== PREPARING DATA === #
     # ======================= #
     log.info('Starting preparing the data.\n')
        
-    # The data will be padded to max_length
-    if not max_length:
-         max_length = data_loaders.get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
-                                                          nrows_to_load = nrows_to_load)
-         
-    log.info('Max length: {0}'.format(max_length))
-    
     # Train data
     if do_train:
-        train_datasets, train_dataloader =  data_loaders.get_prepared_data(input_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range,  
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+        
 
     # Valid data
     if do_train_with_early_stopping:
-        valid_datasets, valid_dataloader =  data_loaders.get_prepared_data(input_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
         
     # Test data
     if do_test:
-        test_datasets, test_dataloader =  data_loaders.get_prepared_data(input_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+        test_dataset, test_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length,  speed_selection_range =  speed_selection_range,
-                                                                           nrows_to_load = nrows_to_load)
+                                                                           nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
     
     log.info('Data preparing done.\n')
-
-
+    
     # ==== TRAINING ==== #
     # ================== #
     if do_train:
@@ -238,6 +248,9 @@ if __name__ == "__main__":
                 # Update n_batches
                 train_batch_results.n_batches += 1
                 
+                #d = model.decoder
+                #e = model.encoder
+                #sys.exit(0)
             # Save train results per this epoch
             train_results.store_results_per_epoch(train_batch_results)
                       
@@ -287,7 +300,7 @@ if __name__ == "__main__":
                 
             # Update LR
             lr = scheduler.get_lr()[0]
-            if lr>0.0001:
+            if lr>0.00001:
                     scheduler.step()
                     
             log.info('Epoch: {0}/{1}, Train Loss: {2:.7f},  Valid Loss: {2:.7f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
