@@ -108,7 +108,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 2028
         do_test = False
-        n_epochs = 200
+        n_epochs = 100
         n_pred_plots = 100
 
     # Set flags
