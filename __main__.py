@@ -131,16 +131,15 @@ if __name__ == "__main__":
         do_train=True
         
     # Name output directory    
+    out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, attn)
     if args.speed_min and args.speed_max:
-        out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}_attn_{6}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device, attn)
-    else:
-        out_dir = '{0}/windowsize_{1}_{2}_{3}_attn_{4}'.format(out_dir_base, window_size, model_name, device, attn)
-    
+        out_dir = '{0}_speedrange_{1}_{2}'.format(out_dir, speed_selection_range[0], speed_selection_range[1])    
     if defect_height_selection:
         out_dir = '{0}_defheight_{1}_{2}'.format(out_dir,defect_height_selection[0],defect_height_selection[1])
     if defect_width_selection:
        out_dir = '{0}_defhwidth_{1}_{2}'.format(out_dir,defect_width_selection[0],defect_width_selection[1])    
        
+    out_dir = '{0}_{1}'.format(out_dir,device)
     if nrows_to_load==-1:
         out_dir = '{0}_nrows_all'.format(out_dir)
     else:
@@ -178,16 +177,19 @@ if __name__ == "__main__":
     # Train data
     if do_train:
         train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
     # Valid data
     if do_train_with_early_stopping:
         valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
         
     # Test data
     if do_test:
         test_dataset, test_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
     
     log.info('Data preparing done.\n')
     
@@ -373,7 +375,7 @@ elif (not do_train_with_early_stopping and do_test):
     plotter.plot_trainvalid_learning_curve()
     plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
-
+log.info('Done! Results written to: {0}'.format(out_dir))
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
 
