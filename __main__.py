@@ -51,11 +51,11 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default = 1000, type=int,
+    parser.add_argument('--w_max', default = 500, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = -1000, type=int,
+    parser.add_argument('--h_min', default = -500, type=int,
                         help = 'Defect heigh minimum') 
-    parser.add_argument('--h_max', default = 1000, type=int,
+    parser.add_argument('--h_max', default = 500, type=int,
                         help = 'Defect heigh maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -341,36 +341,38 @@ log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
 # Best Model Predictions
 if do_train:
-    train_true, train_pred, train_speeds, train_orig_lengths, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
+    train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
 if do_train_with_early_stopping:
-    valid_true, valid_pred, valid_speeds, valid_orig_lengths, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
+    valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
 if do_test:
-    test_true, test_pred, test_speeds, test_orig_lengths, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
+    test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
+
 
 # Plot results 
 if (do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, 
+                                 speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, 
+                                 attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples = n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples = n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, 'train', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples = n_pred_plots)
     
 elif (do_train_with_early_stopping and not do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, 
-                                 save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, 
+                                 speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, 
+                                 attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
     
+# Only test
 elif (not do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results,
+                                 model_name = model_name, attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
-# Plot attention weights
-attentions =  model.attention_weights.detach().numpy()[:,:,0]
-plotter.plot_attention(attentions, attention_type=attn)
-log.info('Results saved to: {0}'.format(out_dir))
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler

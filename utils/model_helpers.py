@@ -119,6 +119,7 @@ class ModelInfo:
         true_targets = []
         speeds = []
         orig_lengths = []
+        attentions = {}
         
         criterion = nn.MSELoss()
         self.model.eval()
@@ -138,6 +139,7 @@ class ModelInfo:
                     
                 elif self.model_type=='lstm_encdec_with_attn':       
                     out = self.model(acc, targets)
+                    attentions[batch_index] = self.model.attention_weights.detach().numpy()
                     
                 elif self.model_type=='lstm_encdec_with_speed':
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
@@ -159,7 +161,7 @@ class ModelInfo:
                     break
                 
         mean_loss = mean(losses)
-        return true_targets, predicted_targets, speeds, orig_lengths, mean_loss
+        return true_targets, predicted_targets, attentions, speeds, orig_lengths, mean_loss
 
 def get_model_name(model_type):
     if model_type=='lstm_encdec':
