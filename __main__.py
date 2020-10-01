@@ -163,6 +163,7 @@ if __name__ == "__main__":
     log.info('Output dir is: {0}'.format(out_dir))
     log.info('Device: {0}'.format(device))
     log.info('Model type: {0}'.format(model_type))
+    log.info('Attention type: {0}'.format(attn))
     log.info('Window size: {0}'.format(window_size))
     log.info('Speed selection: {0}'.format(speed_selection_range))
     log.info('Defect width selection: {0}'.format(defect_width_selection)) 
