@@ -5,3 +5,7 @@ output/*
 output*/*
 plots*/
 results/*
+*/*.png
+*/*.pdf
+*/*.pth
+window*
