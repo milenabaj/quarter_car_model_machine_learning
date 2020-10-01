@@ -83,18 +83,13 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
         # Select on defect geometry
         log_vu.info('Defect height selection: {0}'.format(defect_height_selection))
         log_vu.info('Defect width selection: {0}'.format(defect_width_selection))
-        geom_cond = None
-        if defect_height_selection and not defect_width_selection:
+        if defect_height_selection:
             geom_cond  = df.defect_height.between(defect_height_selection[0],defect_height_selection[1])
-        elif defect_width_selection and not defect_height_selection:
-            geom_cond  = df.defect_width.between(defect_width_selection[0], defect_width_selection[1])
-        elif defect_height_selection and defect_width_selection:
-            geom_cond = ( df.defect_height.between(defect_height_selection[0],defect_height_selection[1]) & df.defect_width.between(defect_width_selection[0], defect_width_selection[1]) )
-        else:
-            geom_cond = None
-        if geom_cond is not None:
             df = df[geom_cond]
-
+        if defect_width_selection:
+            geom_cond  = df.defect_width.between(defect_width_selection[0], defect_width_selection[1])
+            df = df[geom_cond]
+ 
         # Select on speed
         if speed_selection_range:
             speed_min = speed_selection_range[0]
@@ -109,6 +104,7 @@ def load_pickle_full_path(filename, use_cols = None, speed_selection_range = Non
             df =  df[use_cols].iloc[row_min:row_max]
         else:
             df = df.iloc[row_min:row_max]
+            
         return df
       
         

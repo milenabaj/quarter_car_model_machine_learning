@@ -95,17 +95,16 @@ def get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = 0, 
     dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load,
-                                     defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection )
-        if file.empty:
-            continue #this selection
-        dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq, max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load)
+        dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq,
+                          max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load,
+                          defect_height_selection =  defect_height_selection, defect_width_selection = defect_width_selection)
         data.append(dataset)
     return data
 
 
 class Dataset(Dataset):
-    def __init__(self, filename, filetype, acc_to_severity_seq2seq, max_length,  speed_selection_range = None, nrows_to_load = -1):
+    def __init__(self, filename, filetype, acc_to_severity_seq2seq, max_length,  speed_selection_range = None, 
+                 nrows_to_load = -1, defect_height_selection = None, defect_width_selection = None):
         dlog.debug('=> Creating dataset for file {0}'.format(filename))
         
         # Take input
@@ -116,7 +115,9 @@ class Dataset(Dataset):
         self.speed_selection_range = speed_selection_range
         self.nrows_to_load  = nrows_to_load
         self.max_length = max_length
-
+        self.defect_height_selection = defect_height_selection
+        self.defect_width_selection = defect_width_selection
+        
         # Load features and targets
         self.load_data()
 
@@ -125,7 +126,8 @@ class Dataset(Dataset):
 
     def load_data(self):
         dlog.info('Loading: {0}'.format(self.filename))
-        file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load)
+        file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load,
+                                     defect_height_selection = self.defect_height_selection, defect_width_selection = self.defect_width_selection )
         self.df = file
         
         # Save original lengths

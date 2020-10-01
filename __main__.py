@@ -109,7 +109,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.001
+    learning_rate= 0.0001
     patience = 20
     n_pred_plots = 5
     save_results = True
@@ -121,9 +121,9 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        batch_size = 1024
+        batch_size = 512
         do_test = False
-        n_epochs = 50
+        n_epochs = 100
         n_pred_plots = 100
 
     # Set flags
@@ -174,8 +174,6 @@ if __name__ == "__main__":
     if do_train:
         train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
                                                                            max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
-        
-
     # Valid data
     if do_train_with_early_stopping:
         valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
