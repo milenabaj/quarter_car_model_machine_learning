@@ -13,6 +13,7 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from quarter_car_model_machine_learning.utils.various_utils import *
 import torch
 
+
 # Get logger for module
 plog = get_mogule_logger("plot_utils")
 plt.rc('font', size=30)
@@ -159,4 +160,31 @@ class Plotter():
                 plt.show()
                 plt.close('all')
             
+        return
+    
+    def plot_attention(self, attentions, attention_type, save_fig=True):
+
+        fig, ax = plt.subplots(figsize=(15,15))
+        #plt.title('Attention weights')
+        plt.minorticks_on()
+        
+        # We change the fontsize of minor ticks label 
+        #ax.tick_params(axis='both', which='major', labelsize=10)
+        #ax.tick_params(axis='both', which='minor', labelsize=5)
+        
+        cax = ax.matshow(attentions)
+        #plt.colorbar(cax)
+        
+        # Save fig
+        if save_fig:
+            if self.speed_selection:
+                figname = '{0}/{1}_speedsel_{2}_{3}_attention_{4}.png'.format(self.out_dir, self.model_name, self.speed_selection[0], self.speed_selection[1], attention_type)
+            else:
+                figname = '{0}/{1}_fullspeed_attention_{4}.png'.format(self.out_dir, dataset_type, self.model_name, attention_type)
+              
+        plt.savefig(figname)
+        plt.savefig(figname.replace('.png','.pdf'))
+        plt.show()
+        plt.close('all')           
+        
         return

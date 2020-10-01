@@ -249,7 +249,7 @@ if __name__ == "__main__":
                     out = model(acc, scaled_speed, targets)
                     
                 #log.debug(out.shape)
-   
+                #sys.exit(0)
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
@@ -367,9 +367,14 @@ elif (not do_train_with_early_stopping and do_test):
     plotter.plot_trainvalid_learning_curve()
     plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
-
+# Plot attention weights
+attentions =  model.attention_weights.detach().numpy()[:,:,0]
+plotter.plot_attention(attentions, attention_type=attn)
 log.info('Results saved to: {0}'.format(out_dir))
 
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
+
+
+
 
