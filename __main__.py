@@ -51,11 +51,11 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default = 500, type=int,
+    parser.add_argument('--w_max', default = 300, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = 0, type=int,
+    parser.add_argument('--h_min', default = -300, type=int,
                         help = 'Defect heigh minimum') 
-    parser.add_argument('--h_max', default = 500, type=int,
+    parser.add_argument('--h_max', default = 300, type=int,
                         help = 'Defect heigh maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.0001
+    learning_rate= 0.001
     patience = 20
     n_pred_plots = 5
     save_results = True
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
         nrows_to_load = 10000
-        batch_size = 512
+        batch_size = 1024
         do_test = False
         n_epochs = 100
         n_pred_plots = 100
@@ -141,6 +141,10 @@ if __name__ == "__main__":
     if defect_width_selection:
        out_dir = '{0}_defhwidth_{1}_{2}'.format(out_dir,defect_width_selection[0],defect_width_selection[1])    
        
+    if nrows_to_load==-1
+        out_dir = '{0}_nrows_all'.format(out_dir)
+    else:
+        out_dir = '{0}_nrows_{1}'.format(out_dir, nrows_to_load)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
