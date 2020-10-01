@@ -51,11 +51,11 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default = 300, type=int,
+    parser.add_argument('--w_max', default = 1000, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = -300, type=int,
+    parser.add_argument('--h_min', default = -1000, type=int,
                         help = 'Defect heigh minimum') 
-    parser.add_argument('--h_max', default = 300, type=int,
+    parser.add_argument('--h_max', default = 1000, type=int,
                         help = 'Defect heigh maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         batch_size = 1024
         do_test = False
         n_epochs = 100
-        n_pred_plots = 100
+        n_pred_plots = 200
 
     # Set flags
     if do_train_with_early_stopping: 
