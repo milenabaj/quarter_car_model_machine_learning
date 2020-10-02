@@ -95,9 +95,9 @@ class lstm_decoder(nn.Module):
         
         # Attention Layer
         if self.attn =='general' and self.lstm.bidirectional: 
-            self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=False)
+            self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=True)
         elif self.attn =='general' and not self.lstm.bidirectional:
-            self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=False)
+            self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=True)
                    
         # Final LSTM to Linear Layer
         if self.lstm.bidirectional:
