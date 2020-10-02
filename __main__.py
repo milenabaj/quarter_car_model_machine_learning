@@ -53,7 +53,7 @@ if __name__ == "__main__":
                         help = 'Defect width minimum') 
     parser.add_argument('--w_max', default = 500, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = 0, type=int,
+    parser.add_argument('--h_min', default = -500, type=int,
                         help = 'Defect heigh minimum') 
     parser.add_argument('--h_max', default = 500, type=int,
                         help = 'Defect heigh maximum') 
@@ -120,27 +120,30 @@ if __name__ == "__main__":
     if run_on_cluster:
         input_dir = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-{0}'.format(window_size)
         out_dir_base = '/dtu-compute/mibaj/Golden-car-simulation-August-2020/results' #a new directory will result will be create here
-        nrows_to_load = 10000
-        batch_size = 512
+        nrows_to_load = -1
+        batch_size = 1024
         do_test = False
-        n_epochs = 50
-        n_pred_plots = 100
+        n_epochs = 100
+        n_pred_plots = 200
 
     # Set flags
     if do_train_with_early_stopping: 
         do_train=True
         
     # Name output directory    
+    out_dir = '{0}/windowsize_{1}_{2}_{3}'.format(out_dir_base, window_size, model_name, attn)
     if args.speed_min and args.speed_max:
-        out_dir = '{0}/windowsize_{1}_speedrange_{2}_{3}_{4}_{5}_attn_{6}'.format(out_dir_base, window_size, speed_selection_range[0], speed_selection_range[1], model_name, device, attn)
-    else:
-        out_dir = '{0}/windowsize_{1}_{2}_{3}_attn_{4}'.format(out_dir_base, window_size, model_name, device, attn)
-    
+        out_dir = '{0}_speedrange_{1}_{2}'.format(out_dir, speed_selection_range[0], speed_selection_range[1])    
     if defect_height_selection:
         out_dir = '{0}_defheight_{1}_{2}'.format(out_dir,defect_height_selection[0],defect_height_selection[1])
     if defect_width_selection:
        out_dir = '{0}_defhwidth_{1}_{2}'.format(out_dir,defect_width_selection[0],defect_width_selection[1])    
        
+    out_dir = '{0}_{1}'.format(out_dir,device)
+    if nrows_to_load==-1:
+        out_dir = '{0}_nrows_all'.format(out_dir)
+    else:
+        out_dir = '{0}_nrows_{1}'.format(out_dir, nrows_to_load)
     
     # Create output directory      
     if not os.path.exists(out_dir_base):
@@ -159,6 +162,7 @@ if __name__ == "__main__":
     log.info('Output dir is: {0}'.format(out_dir))
     log.info('Device: {0}'.format(device))
     log.info('Model type: {0}'.format(model_type))
+    log.info('Attention type: {0}'.format(attn))
     log.info('Window size: {0}'.format(window_size))
     log.info('Speed selection: {0}'.format(speed_selection_range))
     log.info('Defect width selection: {0}'.format(defect_width_selection)) 
@@ -173,18 +177,19 @@ if __name__ == "__main__":
     # Train data
     if do_train:
         train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
-        
-
+                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
     # Valid data
     if do_train_with_early_stopping:
         valid_dataset, valid_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'valid', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
         
     # Test data
     if do_test:
         test_dataset, test_dataloader, _ =  data_loaders.get_prepared_data(input_dir, out_dir, 'test', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
+                                                                           max_length = max_length,  speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
     
     log.info('Data preparing done.\n')
     
@@ -215,7 +220,7 @@ if __name__ == "__main__":
         teacher_forcing_ratio = 0.6
         for epoch_index in range(0, n_epochs):
             log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
-            print('Teacher forcing ratio: ',teacher_forcing_ratio)
+            log.debug('Teacher forcing ratio: {0:.2f}',round(teacher_forcing_ratio))
             #if epoch_index%100==0:
             #    log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
     
@@ -246,7 +251,7 @@ if __name__ == "__main__":
                     out = model(acc, scaled_speed, targets)
                     
                 #log.debug(out.shape)
-   
+                #sys.exit(0)
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
@@ -338,35 +343,42 @@ log.debug('Best epoch: {0}\n'.format(best_model_info.epoch))
 
 # Best Model Predictions
 if do_train:
-    train_true, train_pred, train_speeds, train_orig_lengths, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
+    train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, train_loss = best_model_info.predict(train_dataloader, datatype = 'train')
 if do_train_with_early_stopping:
-    valid_true, valid_pred, valid_speeds, valid_orig_lengths, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
+    valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, valid_loss = best_model_info.predict(valid_dataloader, datatype = 'valid')
 if do_test:
-    test_true, test_pred, test_speeds, test_orig_lengths, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
+    test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, test_loss = best_model_info.predict(test_dataloader, datatype = 'test')
+
 
 # Plot results 
 if (do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, 
+                                 speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, 
+                                 attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples = n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples = n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, 'train', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples = n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples = n_pred_plots)
     
 elif (do_train_with_early_stopping and not do_test):
-    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, speed_selection = speed_selection_range, 
-                                 save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(train_results = train_results, valid_results = valid_results, window_size = window_size, 
+                                 speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, 
+                                 attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
     
+# Only test
 elif (not do_train_with_early_stopping and do_test):
-    plotter = plot_utils.Plotter(window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results, model_name = model_name, out_dir = out_dir)
+    plotter = plot_utils.Plotter(window_size = window_size, speed_selection = speed_selection_range, save_plots = save_results,
+                                 model_name = model_name, attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
-    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
+    plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
-
-log.info('Results saved to: {0}'.format(out_dir))
-
+log.info('Done! Results written to: {0}'.format(out_dir))
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
+
+
+
 

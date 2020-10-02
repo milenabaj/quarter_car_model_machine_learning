@@ -56,7 +56,7 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
 # Functions used for getting the data #
 # =================================== #    
 def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, batch_size, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1,
-                      defect_height_selection = None, defect_width_selection = None): 
+                      defect_height_selection = None, defect_width_selection = None, attn_type = None): 
         
     # The data will be padded to max_length
     if not max_length and filetype=='train':
@@ -71,16 +71,28 @@ def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, bat
                                                                                                   defect_width_selection[0], defect_width_selection[1],defect_height_selection[0],
                                                                                                   defect_height_selection[1], nrows)                                                                                                                                                                                          
     # Load if exists, else create
+    merged_dataset = None
     if os.path.exists(out_filename):
+        print('Loading: ',out_filename)
         merged_dataset = torch.load(out_filename) 
-    else:
+    else:  #check if input dataset with same filtering exists in a dir for another attn model dir
+        other_attns = [a for a in ['dot','general','concat'] if a!=attn_type]
+        for other_attn in other_attns:
+            print('Checking: ',other_attn)
+            if os.path.exists(out_filename.replace(attn_type,other_attn)):
+                print('Loading: ', out_filename.replace(attn_type,other_attn))
+                merged_dataset = torch.load(out_filename.replace(attn_type,other_attn))  
+                
+    # If it does not exist, create it
+    if not merged_dataset:
+        print('Creating file')
         datasets = get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = num_workers, max_length =  max_length,  speed_selection_range = speed_selection_range, 
                                 nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection,  defect_width_selection =  defect_width_selection) 
         merged_dataset = ConcatDataset(datasets)        
         torch.save(merged_dataset, out_filename)
         
     # Create the dataloader 
-    merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers)
+    merged_dataloader = DataLoader(merged_dataset, batch_size = batch_size, num_workers=num_workers, shuffle=True)
     n_samples = sum(merged_dataloader.dataset.cumulative_sizes)
     dlog.info('{0} samples.\n'.format(n_samples))
           
@@ -95,17 +107,16 @@ def get_datasets(input_dir, filetype, acc_to_severity_seq2seq, num_workers = 0, 
     dlog.info('\n===> Getting datasets for filetype: {0}'.format(filetype))
     data = []
     for filename in glob.glob('{0}/{1}/*.pkl'.format(input_dir, filetype)):
-        file = load_pickle_full_path(filename, speed_selection_range = speed_selection_range, row_max = nrows_to_load,
-                                     defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection )
-        if file.empty:
-            continue #this selection
-        dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq, max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load)
+        dataset = Dataset(filename=filename, filetype = filetype,acc_to_severity_seq2seq = acc_to_severity_seq2seq,
+                          max_length=max_length, speed_selection_range = speed_selection_range, nrows_to_load = nrows_to_load,
+                          defect_height_selection =  defect_height_selection, defect_width_selection = defect_width_selection)
         data.append(dataset)
     return data
 
 
 class Dataset(Dataset):
-    def __init__(self, filename, filetype, acc_to_severity_seq2seq, max_length,  speed_selection_range = None, nrows_to_load = -1):
+    def __init__(self, filename, filetype, acc_to_severity_seq2seq, max_length,  speed_selection_range = None, 
+                 nrows_to_load = -1, defect_height_selection = None, defect_width_selection = None):
         dlog.debug('=> Creating dataset for file {0}'.format(filename))
         
         # Take input
@@ -116,7 +127,9 @@ class Dataset(Dataset):
         self.speed_selection_range = speed_selection_range
         self.nrows_to_load  = nrows_to_load
         self.max_length = max_length
-
+        self.defect_height_selection = defect_height_selection
+        self.defect_width_selection = defect_width_selection
+        
         # Load features and targets
         self.load_data()
 
@@ -125,7 +138,8 @@ class Dataset(Dataset):
 
     def load_data(self):
         dlog.info('Loading: {0}'.format(self.filename))
-        file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load)
+        file = load_pickle_full_path(self.filename, speed_selection_range = self.speed_selection_range, row_max = self.nrows_to_load,
+                                     defect_height_selection = self.defect_height_selection, defect_width_selection = self.defect_width_selection )
         self.df = file
         
         # Save original lengths
