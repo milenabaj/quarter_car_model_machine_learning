@@ -101,16 +101,17 @@ class Plotter():
         examples = random.sample(range(n_samples), n_examples) #sample n_examples number of sequences from the batch
       
         for i, example in enumerate(examples):
+            
             # Unpad
             orig_length = orig_lengths[example]
             speed = speeds[example]
             pred = 100*pred_batch[:,example,:].reshape(-1)[:orig_length] # to cm
             true = 100*true_batch[:,example,:].reshape(-1)[:orig_length] # to cm
             distance = np.linspace(0,self.window_size, num = orig_length)
-            attn = attention[:,:,example]
+            attn = attention[:,:,example] #first index is output ts, second is input ts
                    
             # Plot
-            fig, ax = plt.subplots()
+            fig, (ax,ax0) = plt.subplots(2,1)
             ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=8, marker='*', alpha=0.9)
             ax.scatter(distance, true, c = 'red', label = 'True', s=8, marker='o', alpha=0.9)
             #fig.set_title(dataset_type)
@@ -136,19 +137,26 @@ class Plotter():
             #ax.text(0.8, 0.8, '-{0} dataset \nSpeed: {1} km/h'.format(dataset_type.upper(), speed), horizontalalignment='right', verticalalignment='top', transform=ax.transAxes)
             #fig.tight_layout()
             
+            # Plot Attention
+            plt.minorticks_on()
+            c = ax0.imshow(attn)
+            plt.colorbar(c)
+            #self.plot_attention(attn, attention_type=self.attn_type, figname = figname.replace('severity','attention'))
+            
             # Save
             if self.speed_selection:
-                figname = '{0}/{1}_{2}_speedsel_{3}_{4}_severity_figure{5}.png'.format(self.out_dir, dataset_type.lower(), self.model_name,
+                figname = '{0}/{1}_{2}_{3}_speedsel_{4}_{5}_severity_figure_{6}.png'.format(self.out_dir, dataset_type.lower(), self.model_name, self.attn_type,
                                                                                        self.speed_selection[0], self.speed_selection[1], example)
             else:
-                figname = '{0}/{1}_{2}_fullspeed_severity_figure{3}.png'.format(self.out_dir, dataset_type, self.model_name, example)
+                figname = '{0}/{1}_{2}_{3}_fullspeed_severity_figure{4}.png'.format(self.out_dir, dataset_type, self.model_name, self.attn_type, example)
                 
             plt.savefig(figname)
             plt.savefig(figname.replace('.png','.pdf'))
-            plt.show()
-            plt.close('all')
             
-            self.plot_attention(attn, attention_type=self.attn_type, figname = figname.replace('severity','attention'))
+            plt.show()
+            plt.tight_layout()
+            plt.close('all')
+            sys.exit(0)
             
         return
     
@@ -162,8 +170,8 @@ class Plotter():
         #ax.tick_params(axis='both', which='major', labelsize=10)
         #ax.tick_params(axis='both', which='minor', labelsize=5)
         
-        cax = ax.matshow(attentions)
-        #plt.colorbar(cax)
+        c = ax.imshow(attentions)
+        plt.colorbar(c)
         
         # Save fig        
         plt.savefig(figname)

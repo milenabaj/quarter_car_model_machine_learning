@@ -57,7 +57,8 @@ def get_dataset_max_length(input_dir, filetype, num_workers = 0, speed_selection
 # =================================== #    
 def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, batch_size, num_workers = 0, max_length = None, speed_selection_range = None, nrows_to_load = -1,
                       defect_height_selection = None, defect_width_selection = None, attn_type = None): 
-        
+           
+    print('Looking for input for: ',filetype)
     # The data will be padded to max_length
     if not max_length and filetype=='train':
          max_length = get_dataset_max_length(input_dir, 'train', num_workers = 0,  speed_selection_range =  speed_selection_range, 
