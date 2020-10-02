@@ -111,7 +111,7 @@ class Plotter():
             attn = attention[:,:,example] #first index is output ts, second is input ts
                    
             # Plot
-            fig, (ax,ax0) = plt.subplots(2,1)
+            fig, ax = plt.subplots()
             ax.scatter(distance, pred, c = 'blue', label = 'Predicted', s=8, marker='*', alpha=0.9)
             ax.scatter(distance, true, c = 'red', label = 'True', s=8, marker='o', alpha=0.9)
             #fig.set_title(dataset_type)
@@ -136,13 +136,7 @@ class Plotter():
             # Text
             #ax.text(0.8, 0.8, '-{0} dataset \nSpeed: {1} km/h'.format(dataset_type.upper(), speed), horizontalalignment='right', verticalalignment='top', transform=ax.transAxes)
             #fig.tight_layout()
-            
-            # Plot Attention
-            plt.minorticks_on()
-            c = ax0.imshow(attn)
-            plt.colorbar(c)
-            #self.plot_attention(attn, attention_type=self.attn_type, figname = figname.replace('severity','attention'))
-            
+  
             # Save
             if self.speed_selection:
                 figname = '{0}/{1}_{2}_{3}_speedsel_{4}_{5}_severity_figure_{6}.png'.format(self.out_dir, dataset_type.lower(), self.model_name, self.attn_type,
@@ -156,7 +150,12 @@ class Plotter():
             plt.show()
             plt.tight_layout()
             plt.close('all')
-            sys.exit(0)
+            
+                        
+            # Plot Attention
+            self.plot_attention(attn, attention_type=self.attn_type, figname = figname.replace('severity','attention'))
+          
+            #sys.exit(0)
             
         return
     
