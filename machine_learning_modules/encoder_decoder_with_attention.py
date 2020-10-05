@@ -40,6 +40,12 @@ class lstm_encoder(nn.Module):
         # define LSTM layer
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
 
+        # Init LSTM
+        torch.nn.init.zeros_(self.lstm.weight_hh_l0)
+        torch.nn.init.zeros_(self.lstm.weight_ih_l0)
+        if self.lstm.bidirectional:
+            torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
+            torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
 
     def forward(self, x_input):
 
@@ -93,6 +99,13 @@ class lstm_decoder(nn.Module):
         # LSTM Layer
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
         
+        # Init LSTM
+        torch.nn.init.zeros_(self.lstm.weight_hh_l0)
+        torch.nn.init.zeros_(self.lstm.weight_ih_l0)
+        if self.lstm.bidirectional:
+            torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
+            torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
+                             
         # Attention Layer if general
         if self.attn =='general' and self.lstm.bidirectional: 
             self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=True)
@@ -254,3 +267,4 @@ class lstm_seq2seq_with_attn(nn.Module):
         return self.outputs
 
 
+# IDEA: generate gaussian hard coded attention with max in the same point and around a bit

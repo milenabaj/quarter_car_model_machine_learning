@@ -324,7 +324,7 @@ if __name__ == "__main__":
             if lr>0.00001:
                     scheduler.step()
                     
-            log.info('Epoch: {0}/{1}, Train Loss: {2:.7f},  Valid Loss: {2:.7f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
+            log.info('Epoch: {0}/{1}, Train Loss: {2:.7f},  Valid Loss: {3:.7f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
 
 
 # ======== BEST MODEL PREDICTIONS ========= #
