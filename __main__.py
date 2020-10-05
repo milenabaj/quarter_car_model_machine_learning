@@ -109,7 +109,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.01
+    learning_rate= 0.1
     patience = 30
     n_pred_plots = 5
     save_results = True
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 1024
         do_test = False
-        n_epochs = 100
+        n_epochs = 50
         n_pred_plots = 200
 
     # Set flags
