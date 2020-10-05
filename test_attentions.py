@@ -128,6 +128,7 @@ if __name__ == "__main__":
     save_results = True
     defect_height_selection = [-200,200]
     defect_width_selection = [0,300]
+    attn='dot'
         
     # ======== SET ========= #
     # ======================= #
@@ -185,9 +186,10 @@ if __name__ == "__main__":
        
     # Train data
     if do_train:
-        train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
-                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection)
-        
+           train_dataset, train_dataloader, max_length =  data_loaders.get_prepared_data(input_dir, out_dir, 'train', acc_to_severity_seq2seq, batch_size, num_workers = num_workers, 
+                                                                           max_length = max_length, speed_selection_range =  speed_selection_range, nrows_to_load = nrows_to_load, 
+                                                                           defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
+   
 
     
   

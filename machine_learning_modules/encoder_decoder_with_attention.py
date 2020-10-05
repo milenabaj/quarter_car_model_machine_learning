@@ -93,12 +93,14 @@ class lstm_decoder(nn.Module):
         # LSTM Layer
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
         
-        # Attention Layer
+        # Attention Layer if general
         if self.attn =='general' and self.lstm.bidirectional: 
             self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=True)
+            torch.nn.init.zeros_(self.attention_layer.weight)
         elif self.attn =='general' and not self.lstm.bidirectional:
             self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=True)
-                   
+            torch.nn.init.zeros_(self.attention_layer.weight)
+            
         # Final LSTM to Linear Layer
         if self.lstm.bidirectional:
             self.linear = nn.Linear(4*hidden_size, output_size) #*2 beacuse of concat vector, *2 because of bider. LSTM
