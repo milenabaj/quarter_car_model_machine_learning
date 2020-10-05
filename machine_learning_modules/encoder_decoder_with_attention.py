@@ -160,7 +160,7 @@ class lstm_decoder(nn.Module):
             n_batches = encoder_output.shape[1]
             l = np.array(range(len)).reshape(-1,1,1)
             
-            self.scores = torch.FloatTensor(l.repeat(n_batches, axis=1))
+            self.scores = torch.FloatTensor(l.repeat(n_batches, axis=1)).to(self.device)
             self.scores= self.scores.permute(1,0,2)
             self.attn_weights = torch.FloatTensor(norm(t,20).pdf(self.scores))
             #self.attn_weights  = self.attention_man(self.attn_weights.squeeze(2) ).unsqueeze(2)
