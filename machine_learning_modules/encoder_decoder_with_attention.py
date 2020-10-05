@@ -134,7 +134,8 @@ class lstm_decoder(nn.Module):
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
         # Attention weights after softmax
-        self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+        self.attn_weights = self.scores 
+        #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
