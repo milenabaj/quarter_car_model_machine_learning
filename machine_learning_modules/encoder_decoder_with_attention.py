@@ -148,7 +148,7 @@ class lstm_decoder(nn.Module):
             
         # Attention weights after softmax
         #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
-        self.attn_weights = torch.zeros((encoder_output.shape[1],encoder_output.shape[0],1))
+        self.attn_weights = torch.zeros((encoder_output.shape[1],encoder_output.shape[0],1)).to(self.device)
         self.attn_weights[:,t]=1
         self.attn_weights.to(self.device)
         
