@@ -73,13 +73,14 @@ def get_prepared_data(input_dir, out_dir, filetype, acc_to_severity_seq2seq, bat
                                                                                                   defect_height_selection[1], nrows)                                                                                                                                                                                          
     # Load if exists, else create
     merged_dataset = None
+    print('Checking: ',out_filename)
     if os.path.exists(out_filename):
         print('Loading: ',out_filename)
         merged_dataset = torch.load(out_filename) 
     else:  #check if input dataset with same filtering exists in a dir for another attn model dir
         other_attns = [a for a in ['dot','general','concat'] if a!=attn_type]
         for other_attn in other_attns:
-            print('Checking: ',other_attn)
+            print('Checking: ',out_filename.replace(attn_type,other_attn))
             if os.path.exists(out_filename.replace(attn_type,other_attn)):
                 print('Loading: ', out_filename.replace(attn_type,other_attn))
                 merged_dataset = torch.load(out_filename.replace(attn_type,other_attn))  
