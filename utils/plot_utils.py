@@ -59,7 +59,7 @@ class Plotter():
         self.out_dir = '{0}/plots'.format(out_dir)
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
-        
+
     def plot_trainvalid_learning_curve(self, plot_text = ''):   
         plog.debug('Plotting Learning Curve')
         train_loss = self.train_results.loss_history

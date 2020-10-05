@@ -121,7 +121,7 @@ class lstm_decoder(nn.Module):
             self.linear = nn.Linear(2*hidden_size, output_size) # *2 because of concat vector
         
 
-    def forward(self, x_input, hidden_states, encoder_output):
+    def forward(self, x_input, hidden_states, encoder_output, t):
 
         '''
         : param x_input:                    should be 2D (batch_size, input_size)
@@ -147,7 +147,9 @@ class lstm_decoder(nn.Module):
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
         # Attention weights after softmax
-        self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+        #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+        self.attn_weights = torch.zeros((encoder_output.shape[1],encoder_output.shape[0],1))
+        self.attn_weights[:,t]=1
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
@@ -240,7 +242,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         # Teacher forcing: Feed the target as the next input
         if use_teacher_forcing:
             for t in range(self.target_len):
-                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output)
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output, t)
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
                
                 # Save attention weights
@@ -253,7 +255,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         else:
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):
-                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output)
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output, t)
                 self.decoder_input = self.decoder_output.unsqueeze(0).to(self.device) # current prediction will be the input in the next timestep
                             
                 # Save attention weights
@@ -268,3 +270,4 @@ class lstm_seq2seq_with_attn(nn.Module):
 
 
 # IDEA: generate gaussian hard coded attention with max in the same point and around a bit
+        # mean equal to the point where it is
