@@ -14,6 +14,7 @@ from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from torch.optim import lr_scheduler
 from torch.optim.lr_scheduler import StepLR
 from quarter_car_model_machine_learning.utils.various_utils import *
+from scipy.stats import norm
 
 # Get logger for module
 ed_log = get_mogule_logger("encoder_decoder")
@@ -102,9 +103,9 @@ class lstm_decoder(nn.Module):
         # Init LSTM
         torch.nn.init.zeros_(self.lstm.weight_hh_l0)
         torch.nn.init.zeros_(self.lstm.weight_ih_l0)
-        if self.lstm.bidirectional:
-            torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
-            torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
+        #if self.lstm.bidirectional:
+        #    torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
+        #    torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
                              
         # Attention Layer if general
         if self.attn =='general' and self.lstm.bidirectional: 
@@ -113,6 +114,9 @@ class lstm_decoder(nn.Module):
         elif self.attn =='general' and not self.lstm.bidirectional:
             self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=True)
             torch.nn.init.zeros_(self.attention_layer.weight)
+            
+       # self.attention_man = nn.Linear(136,136, bias=False)
+        #torch.nn.init.ones_(self.attention_man.weight)
             
         # Final LSTM to Linear Layer
         if self.lstm.bidirectional:
@@ -141,16 +145,30 @@ class lstm_decoder(nn.Module):
         # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
         if self.attn =='dot':
             self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
+            
+            # Attention weights after softmax
+            self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         elif self.attn =='general':
             # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix
             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
-        # Attention weights after softmax
-        self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
-        #self.attn_weights = torch.zeros((encoder_output.shape[1],encoder_output.shape[0],1)).to(self.device)
-        #self.attn_weights[:,t]=1
-        #self.attn_weights.to(self.device)
+            # Attention weights after softmax
+            self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+        elif self.attn=='manual':
+            len = encoder_output.shape[0]
+            n_batches = encoder_output.shape[1]
+            l = np.array(range(len)).reshape(-1,1,1)
+            
+            self.scores = torch.FloatTensor(l.repeat(n_batches, axis=1))
+            self.scores= self.scores.permute(1,0,2)
+            self.attn_weights = torch.FloatTensor(norm(t,20).pdf(self.scores))
+            #self.attn_weights  = self.attention_man(self.attn_weights.squeeze(2) ).unsqueeze(2)
+            #sys.exit(0)
+            #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+
+            self.attn_weights.to(self.device)
+
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
