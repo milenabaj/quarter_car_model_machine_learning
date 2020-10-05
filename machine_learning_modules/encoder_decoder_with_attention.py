@@ -134,8 +134,7 @@ class lstm_decoder(nn.Module):
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
         # Attention weights after softmax
-        self.attn_weights = self.scores 
-        #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+        self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
@@ -154,7 +153,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 128, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 256, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda', bidirectional = True, attn = 'general'):
 
         '''
