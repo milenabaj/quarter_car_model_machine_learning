@@ -121,7 +121,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 256, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 9, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda'):
 
         '''
