@@ -109,7 +109,7 @@ if __name__ == "__main__":
     batch_size = 24
     num_workers = 0 #0
     n_epochs = 1
-    learning_rate= 0.1
+    learning_rate= 0.01
     patience = 30
     n_pred_plots = 5
     save_results = True
