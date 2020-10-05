@@ -51,11 +51,11 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default = 2000, type=int,
+    parser.add_argument('--w_max', default = 500, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = 0, type=int,
+    parser.add_argument('--h_min', default = -500, type=int,
                         help = 'Defect heigh minimum') 
-    parser.add_argument('--h_max', default = 2000, type=int,
+    parser.add_argument('--h_max', default = 500, type=int,
                         help = 'Defect heigh maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
