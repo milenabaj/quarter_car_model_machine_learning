@@ -144,6 +144,7 @@ class Plotter():
             else:
                 figname = '{0}/{1}_{2}_{3}_fullspeed_severity_figure{4}.png'.format(self.out_dir, dataset_type, self.model_name, self.attn_type, example)
                 
+            print('Saving: ',figname)
             plt.savefig(figname)
             plt.savefig(figname.replace('.png','.pdf'))
             
@@ -172,7 +173,8 @@ class Plotter():
         c = ax.imshow(attentions)
         plt.colorbar(c)
         
-        # Save fig        
+        # Save fig   
+        print('Saving: ',figname)
         plt.savefig(figname)
         plt.savefig(figname.replace('.png','.pdf'))
         plt.show()

@@ -272,3 +272,4 @@ class lstm_seq2seq_with_attn(nn.Module):
 
 # IDEA: generate gaussian hard coded attention with max in the same point and around a bit
         # mean equal to the point where it is
+#plt.plot(scipy.stats.norm(0, 1).pdf(x))
