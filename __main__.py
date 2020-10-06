@@ -111,11 +111,11 @@ if __name__ == "__main__":
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     n_epochs = 50
     learning_rate= 0.001
-    teacher_forcing_ratio = 1
+    teacher_forcing_ratio = 1.00
     batch_size = 100
     num_workers = 0 #0
     patience = 30
-    n_pred_plots = 1
+    n_pred_plots = 1.
     save_results = True
         
     # ======== SET ========= #
