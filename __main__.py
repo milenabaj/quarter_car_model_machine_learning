@@ -72,9 +72,9 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
-    parser.add_argument('--hidden_size', default = 5, type=int,
+    parser.add_argument('--hidden_size', default = 100, type=int,
                         help = 'Hidden size.') 
-    parser.add_argument('--attn', default = 'general',
+    parser.add_argument('--attn', default = 'dot',
                         help = 'Attention type to use in the model. Choose between dot and general.') 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
@@ -109,10 +109,11 @@ if __name__ == "__main__":
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
-    batch_size = 24
-    num_workers = 0 #0
     n_epochs = 30
     learning_rate= 0.001
+    teacher_forcing_ratio = 0.6
+    batch_size = 24
+    num_workers = 0 #0
     patience = 30
     n_pred_plots = 1
     save_results = True
@@ -219,7 +220,6 @@ if __name__ == "__main__":
         
         # Early_stopping 
         early_stopping = model_helpers.EarlyStopping(patience = patience)
-        teacher_forcing_ratio = 0.6
         for epoch_index in range(0, n_epochs):
             log.info('=========== EPOCH: {0} =========== '.format(epoch_index))
             log.debug('Teacher forcing ratio: {0:.2f}',round(teacher_forcing_ratio))
@@ -375,6 +375,9 @@ elif (not do_train_with_early_stopping and do_test):
     plotter.plot_trainvalid_learning_curve()
     plotter.plot_pred_vs_true_timeseries(test_true, test_pred, test_attentions, test_speeds, test_orig_lengths, 'test', n_examples= n_pred_plots)
 
+df = train_dataset.datasets[0].df
+log.info('Train samples: {0}'.format(sum(train_dataloader.dataset.cummulative_sizes)))
+log.info('Valid samples: {0}'.format(sum(valid_dataloader.dataset.cummulative_sizes)))
 log.info('Done! Results written to: {0}'.format(out_dir))
 # => TODO: define predict to load the trained model and predict on test data
     # prepare predict method to scale the data using the train scaler
