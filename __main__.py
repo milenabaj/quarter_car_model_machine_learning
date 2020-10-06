@@ -127,7 +127,7 @@ if __name__ == "__main__":
         nrows_to_load = -1
         batch_size = 1024
         do_test = False
-        n_epochs = 50
+        n_epochs = 100
         n_pred_plots = 200
 
     # Set flags
@@ -209,7 +209,8 @@ if __name__ == "__main__":
         elif model_type=='lstm_encdec_with_speed':
             model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True, hidden_size = hidden_size)
         model.to(device)
-    
+        model = nn.DataParallel(model)
+        
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
     
