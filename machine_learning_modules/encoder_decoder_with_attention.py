@@ -148,6 +148,7 @@ class lstm_decoder(nn.Module):
             
             # Attention weights after softmax
             self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+            
         elif self.attn =='general':
             # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix
             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
@@ -155,6 +156,7 @@ class lstm_decoder(nn.Module):
             
             # Attention weights after softmax
             self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
+            
         elif self.attn=='manual':
             len = encoder_output.shape[0]
             n_batches = encoder_output.shape[1]
@@ -169,7 +171,6 @@ class lstm_decoder(nn.Module):
 
         self.attn_weights.to(self.device)
 
-        
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
         
@@ -187,7 +188,7 @@ class lstm_decoder(nn.Module):
 class lstm_seq2seq_with_attn(nn.Module):
     ''' train LSTM encoder-decoder and make predictions '''
 
-    def __init__(self, input_size  = 1, hidden_size = 92, target_len = 1000, 
+    def __init__(self, input_size  = 1, hidden_size = 3, target_len = 1000, 
                  use_teacher_forcing = True, device = 'cuda', bidirectional = True, attn = 'general'):
 
         '''
