@@ -158,21 +158,25 @@ class ModelInfo:
                 
                 # Plot features
                 if datatype=='train':
-                    n_examples=2
-                    n_features = 2
+                    plt.rc('font', size=12)
+                    n_examples= 1
+                    n_features = self.model.hidden_size*2
                     for example in range(n_examples):
-                        plt.figure()
-                        plt.title(str(datatype), ' data, example: ',str(example))
-                        plt.plot(acc[:,example,0])
-                        plt.plot(targets[:,example,0])
+                        fig, (ax1, ax2) = plt.subplots(1,2, sharey=True)
+                        fig.suptitle(str(datatype) + ' data, example: ' + str(example), fontsize=12)
+                        ax1.plot(acc[:,example,0])
+                        ax1.plot(targets[:,example,0])
                         for feature_idx in range(n_features):
-                            plt.figure()
-                            feat = model.encoder.lstm_out.detach().numpy()[:,example,feature_idx]
-                            plt.plot(feat)
-                            
-                    
+                            feat = self.model.encoder.lstm_out.detach().numpy()[:,example,feature_idx]
+                            ax2.plot(feat, linewidth=0.5)
+                        plt.tight_layout()
+                        figname = '{0}/{1}_{2}_features_example{3}.png'.format(self.out_dir, datatype, self.model_name, example)
+                        print('Saving: ',figname)
+                        plt.savefig(figname)
+                        plt.show()
                 #log.debug(out.shape)
-                sys.exit(0)
+                #sys.exit(0)
+                plt.close('all')
                 
                 # Update n_batches
                 if batch_index == n_batches-1: # batch_index starts at 0
