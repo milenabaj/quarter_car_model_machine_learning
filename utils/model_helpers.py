@@ -156,6 +156,24 @@ class ModelInfo:
                 speeds.append(speed.cpu().detach().numpy())
                 orig_lengths.append(orig_length.cpu().detach().numpy())
                 
+                # Plot features
+                if datatype=='train':
+                    n_examples=2
+                    n_features = 2
+                    for example in range(n_examples):
+                        plt.figure()
+                        plt.title(str(datatype), ' data, example: ',str(example))
+                        plt.plot(acc[:,example,0])
+                        plt.plot(targets[:,example,0])
+                        for feature_idx in range(n_features):
+                            plt.figure()
+                            feat = model.encoder.lstm_out.detach().numpy()[:,example,feature_idx]
+                            plt.plot(feat)
+                            
+                    
+                #log.debug(out.shape)
+                sys.exit(0)
+                
                 # Update n_batches
                 if batch_index == n_batches-1: # batch_index starts at 0
                     break

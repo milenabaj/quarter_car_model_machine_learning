@@ -72,6 +72,8 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
+    parser.add_argument('--hidden_size', default = 5, type=int,
+                        help = 'Hidden size.') 
     parser.add_argument('--attn', default = 'general',
                         help = 'Attention type to use in the model. Choose between dot and general.') 
     # Directories
@@ -101,7 +103,8 @@ if __name__ == "__main__":
     nrows_to_load = args.nrows_to_load
     input_dir = args.input_dir
     out_dir_base = args.out_dir_base
-    run_on_cluster = args.run_on_cluster # s
+    run_on_cluster = args.run_on_cluster # 
+    hidden_size = args.hidden_size
 
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
@@ -144,7 +147,7 @@ if __name__ == "__main__":
         out_dir = '{0}_nrows_all'.format(out_dir)
     else:
         out_dir = '{0}_nrows_{1}'.format(out_dir, nrows_to_load)
-    
+        
     # Create output directory      
     if not os.path.exists(out_dir_base):
         os.makedirs(out_dir_base)
@@ -197,11 +200,11 @@ if __name__ == "__main__":
     # ==========================#
     if do_train:
         if model_type=='lstm_encdec':
-            model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True)
+            model = encoder_decoder.lstm_seq2seq(device = device, target_len = max_length, use_teacher_forcing = True, hidden_size = hidden_size)
         elif model_type=='lstm_encdec_with_attn':
-            model = encoder_decoder_with_attention.lstm_seq2seq_with_attn(device = device, target_len = max_length, use_teacher_forcing = True, attn = attn)
+            model = encoder_decoder_with_attention.lstm_seq2seq_with_attn(device = device, target_len = max_length, use_teacher_forcing = True, attn = attn, hidden_size = hidden_size)
         elif model_type=='lstm_encdec_with_speed':
-            model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True)  
+            model = encoder_decoder_with_speed.lstm_seq2seq_with_speed(device = device, target_len = max_length, use_teacher_forcing = True, hidden_size = hidden_size)
         model.to(device)
     
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
@@ -249,8 +252,6 @@ if __name__ == "__main__":
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                     out = model(acc, scaled_speed, targets)
                     
-                #log.debug(out.shape)
-                #sys.exit(0)
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
