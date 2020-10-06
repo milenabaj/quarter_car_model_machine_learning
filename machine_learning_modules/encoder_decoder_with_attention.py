@@ -42,11 +42,11 @@ class lstm_encoder(nn.Module):
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
 
         # Init LSTM
-        torch.nn.init.zeros_(self.lstm.weight_hh_l0)
-        torch.nn.init.zeros_(self.lstm.weight_ih_l0)
-        if self.lstm.bidirectional:
-            torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
-            torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
+        #torch.nn.init.zeros_(self.lstm.weight_hh_l0)
+        #torch.nn.init.zeros_(self.lstm.weight_ih_l0)
+        #if self.lstm.bidirectional:
+        #    torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
+        #    torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
 
     def forward(self, x_input):
 
@@ -101,8 +101,8 @@ class lstm_decoder(nn.Module):
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
         
         # Init LSTM
-        torch.nn.init.zeros_(self.lstm.weight_hh_l0)
-        torch.nn.init.zeros_(self.lstm.weight_ih_l0)
+        #torch.nn.init.zeros_(self.lstm.weight_hh_l0)
+        #torch.nn.init.zeros_(self.lstm.weight_ih_l0)
         #if self.lstm.bidirectional:
         #    torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
         #    torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
@@ -110,10 +110,10 @@ class lstm_decoder(nn.Module):
         # Attention Layer if general
         if self.attn =='general' and self.lstm.bidirectional: 
             self.attention_layer = nn.Linear(2*hidden_size, 2*hidden_size, bias=True)
-            torch.nn.init.zeros_(self.attention_layer.weight)
+            #torch.nn.init.zeros_(self.attention_layer.weight)
         elif self.attn =='general' and not self.lstm.bidirectional:
             self.attention_layer = nn.Linear(hidden_size, hidden_size, bias=True)
-            torch.nn.init.zeros_(self.attention_layer.weight)
+            #torch.nn.init.zeros_(self.attention_layer.weight)
             
        # self.attention_man = nn.Linear(136,136, bias=False)
         #torch.nn.init.ones_(self.attention_man.weight)

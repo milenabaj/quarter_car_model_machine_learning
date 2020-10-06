@@ -157,17 +157,17 @@ class ModelInfo:
                 orig_lengths.append(orig_length.cpu().detach().numpy())
                 
                 # Plot features
-                if datatype=='train':
+                if datatype=='train' and batch_index==0:
                     plt.rc('font', size=12)
                     n_examples= 1
                     n_features = self.model.hidden_size*2
                     for example in range(n_examples):
                         fig, (ax1, ax2) = plt.subplots(1,2, sharey=True)
                         fig.suptitle(str(datatype) + ' data, example: ' + str(example), fontsize=12)
-                        ax1.plot(acc[:,example,0])
-                        ax1.plot(targets[:,example,0])
+                        ax1.plot(acc[:,example,0].cpu().detach().numpy())
+                        ax1.plot(targets[:,example,0].cpu().detach().numpy())
                         for feature_idx in range(n_features):
-                            feat = self.model.encoder.lstm_out.detach().numpy()[:,example,feature_idx]
+                            feat = self.model.encoder.lstm_out.cpu().detach().numpy()[:,example,feature_idx]
                             ax2.plot(feat, linewidth=0.5)
                         plt.tight_layout()
                         figname = '{0}/{1}_{2}_features_example{3}.png'.format(self.out_dir, datatype, self.model_name, example)
