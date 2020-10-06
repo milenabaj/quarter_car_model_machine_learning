@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
-    parser.add_argument('--hidden_size', default = 100, type=int,
+    parser.add_argument('--hidden_size', default = 124, type=int,
                         help = 'Hidden size.') 
     parser.add_argument('--attn', default = 'dot',
                         help = 'Attention type to use in the model. Choose between dot and general.') 
@@ -109,10 +109,10 @@ if __name__ == "__main__":
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
-    n_epochs = 30
+    n_epochs = 50
     learning_rate= 0.001
-    teacher_forcing_ratio = 0.6
-    batch_size = 24
+    teacher_forcing_ratio = 1
+    batch_size = 100
     num_workers = 0 #0
     patience = 30
     n_pred_plots = 1
@@ -196,6 +196,8 @@ if __name__ == "__main__":
                                                                            defect_height_selection = defect_height_selection, defect_width_selection = defect_width_selection, attn_type = attn)
     
     log.info('Data preparing done.\n')
+    log.info('Train samples: {0}'.format(sum(train_dataloader.dataset.cummulative_sizes)))
+    log.info('Valid samples: {0}'.format(sum(valid_dataloader.dataset.cummulative_sizes)))
         
     # === Train and validate ===#
     # ==========================#
@@ -238,7 +240,7 @@ if __name__ == "__main__":
                 # Put into the correct dimensions for LSTM
                 acc = acc.permute(1,0) 
                 acc = acc.unsqueeze(2).to(device)
-        
+                
                 targets = targets.permute(1,0)
                 targets = targets.unsqueeze(2).to(device)
                 
@@ -366,7 +368,7 @@ elif (do_train_with_early_stopping and not do_test):
                                  attn_type = model.attn, out_dir = out_dir)
     plotter.plot_trainvalid_learning_curve()
     plotter.plot_pred_vs_true_timeseries(train_true, train_pred, train_attentions, train_speeds, train_orig_lengths, 'train', n_examples= n_pred_plots)
-    plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
+    #plotter.plot_pred_vs_true_timeseries(valid_true, valid_pred, valid_attentions, valid_speeds, valid_orig_lengths, ' valid', n_examples= n_pred_plots)
     
 # Only test
 elif (not do_train_with_early_stopping and do_test):

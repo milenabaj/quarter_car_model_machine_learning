@@ -159,7 +159,7 @@ class ModelInfo:
                 # Plot features
                 if datatype=='train' and batch_index==0:
                     plt.rc('font', size=12)
-                    n_examples= 1
+                    n_examples= 3
                     n_features = self.model.hidden_size*2
                     for example in range(n_examples):
                         fig, (ax1, ax2) = plt.subplots(1,2, sharey=True)

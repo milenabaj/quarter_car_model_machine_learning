@@ -220,6 +220,8 @@ class lstm_seq2seq_with_attn(nn.Module):
         :                                   element in the sequence
 
         '''
+        input_batch = input_batch.flip(1)
+        
         if target_batch is None:
             self.use_teacher_forcing = False # can't use teacher forcing if output sequence is not given
             
@@ -239,6 +241,8 @@ class lstm_seq2seq_with_attn(nn.Module):
         self.decoder_input = torch.zeros([1, batch_size, 1]).to(self.device) # start of the output seq.
         self.decoder_hidden = self.encoder_hidden
 
+        #self.decoder_hidden = (torch.zeros(self.encoder_hidden[0].shape), torch.zeros(self.encoder_hidden[1].shape))
+        
         # To cuda
         self.decoder_hidden[0].to(self.device)
         self.decoder_hidden[1].to(self.device)
