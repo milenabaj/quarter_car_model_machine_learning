@@ -112,7 +112,7 @@ class lstm_decoder(nn.Module):
             torch.nn.init.zeros_(self.attention_layer.weight)
             
         # Final LSTM to Linear Layer
-        self.linear = nn.Linear(self.hidden_size, output_size) 
+        self.linear = nn.Linear(2*self.hidden_size, output_size) #2 because the context vector is concatenated with the lstm out
         
 
     def forward(self, x_input, hidden_states, encoder_output, t):
@@ -131,41 +131,28 @@ class lstm_decoder(nn.Module):
         # LSTM
         x_input.to(self.device)
         self.lstm_out, self.hidden = self.lstm(x_input, hidden_states)  # init. hidden states to enc. hidden
-        
-        sys.exit(0)
-        
-        # Attention (put batch first to get correct bmm and then put 2D mat. in correct shapes for mm)
+                
+        # Dot attention 
         if self.attn =='dot':
             self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
-                        
+            # put batch first to get correct bmm and then put 2D mat. in correct shapes for mm
+           
+        # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix             
         elif self.attn =='general':
-            # In general attention, decoder hidden state is passed through linear layers to introduce a weight matrix
             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             
-        elif self.attn=='manual':
-            len = encoder_output.shape[0]
-            n_batches = encoder_output.shape[1]
-            l = np.array(range(len)).reshape(-1,1,1)
-            
-            self.scores = torch.FloatTensor(l.repeat(n_batches, axis=1))
-            self.scores= self.scores.permute(1,0,2)
-            self.attn_weights = torch.FloatTensor(norm(t,20).pdf(self.scores)).to(self.device)
-            #self.attn_weights  = self.attention_man(self.attn_weights.squeeze(2) ).unsqueeze(2)
-            #sys.exit(0)
-            #self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
-
         # Attention weights after softmax
         self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         self.attn_weights.to(self.device)
 
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
-        
+    
         # Concat. context vector and lstm out along the hidden state dimension
         self.cat = torch.cat( (self.context_vector.permute(2,0,1),self.lstm_out), dim=2)
         self.cat = self.cat.squeeze(0) #-> [batch size, hidden dim]
-        
+
         # Final Linear layer
         prediction = self.linear(self.cat)
         
@@ -251,7 +238,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         if use_teacher_forcing:
             for t in range(self.target_len):
                 self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output, t)
-                sys.exit(0)
+               
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
                
                 # Save attention weights

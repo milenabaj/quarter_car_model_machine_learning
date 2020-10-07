@@ -57,7 +57,7 @@ if __name__ == "__main__":
                         help = 'Defect heigh minimum') 
     parser.add_argument('--h_max', default = 0, type=int,
                         help = 'Defect heigh maximum') 
-    parser.add_argument('--nrows_to_load', default = 1000,
+    parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
     
     
@@ -254,11 +254,12 @@ if __name__ == "__main__":
                 elif model_type=='lstm_encdec_with_speed':
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                     out = model(acc, scaled_speed, targets)
-                    
+                   
+              
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()
-        
+           
                 # Backward propagation
                 model.zero_grad()
                 train_loss.backward()
