@@ -51,13 +51,13 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default = 500, type=int,
+    parser.add_argument('--w_max', default =  np.inf, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = -500, type=int,
+    parser.add_argument('--h_min', default = -np.inf, type=int,
                         help = 'Defect heigh minimum') 
-    parser.add_argument('--h_max', default = 0, type=int,
+    parser.add_argument('--h_max', default =  np.inf, type=int,
                         help = 'Defect heigh maximum') 
-    parser.add_argument('--nrows_to_load', default = 1000,
+    parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
     
     
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     model_name = model_helpers.get_model_name(model_type)
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     save_results = True
-    n_epochs = 10
+    n_epochs = 1
     batch_size = 512
     num_workers = 0 #0
     patience = 30
@@ -323,7 +323,7 @@ if __name__ == "__main__":
         
                 if early_stopping.early_stop:
                     log.info("Early stopping")
-                    log.info('Epoch: {0}/{1}, Train Loss: {2:.6f},  Valid Loss: {2:.6f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
+                    log.info('Epoch: {0}/{1}, Train Loss: {2:.6f},  Valid Loss: {3:.6f}'.format(epoch_index, n_epochs, train_results.loss_history[-1], valid_results.loss_history[-1]))
                     break
                 
             # Update LR
