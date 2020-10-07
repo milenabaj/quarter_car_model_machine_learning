@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
-    parser.add_argument('--hidden_size', default = 124, type=int,
+    parser.add_argument('--hidden_size', default = 4, type=int,
                         help = 'Hidden size.') 
     parser.add_argument('--attn', default = 'dot',
                         help = 'Attention type to use in the model. Choose between dot and general.') 
@@ -111,8 +111,8 @@ if __name__ == "__main__":
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
     n_epochs = 50
     learning_rate= 0.001
-    teacher_forcing_ratio = 1.00
-    batch_size = 100
+    teacher_forcing_ratio = 0.6
+    batch_size = 3
     num_workers = 0 #0
     patience = 30
     n_pred_plots = 1.
