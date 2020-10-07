@@ -33,17 +33,24 @@ class lstm_encoder(nn.Module):
 
         super(lstm_encoder, self).__init__()
         self.input_size = input_size
-        self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.device = device
         self.bidirectional = bidirectional 
+        self.ndirs=2 if self.bidirectional else 1
+        
+        hidden_size_a = hidden_size
+        hidden_size_b = hidden_size_a*2
+        hidden_size_last = hidden_size_b *2
 
-        # define LSTM layer
-        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers, bidirectional = self.bidirectional)
-        
-        # Initialize hidden states with zeros
-        self.init_hidden_zeros()
-        
+        # Define LSTM layers
+        self.lstm_a = nn.LSTM(input_size = input_size, hidden_size = hidden_size_a, num_layers = 1, bidirectional = self.bidirectional)
+        self.lstm_b = nn.LSTM(input_size = input_size, hidden_size = hidden_size_b, num_layers = 1, bidirectional = self.bidirectional)
+        self.lstm = nn.LSTM(input_size = self.ndirs*hidden_size, hidden_size = hidden_size_last, num_layers = 1, bidirectional = self.bidirectional) #last
+        self.last_hidden_size = self.ndirs * self.lstm.hidden_size
+
+        # Initialize weights with zeros
+        self.init_hidden_zeros(self.lstm_a)
+        self.init_hidden_zeros(self.lstm)
         
     def forward(self, x_input):
 
@@ -54,9 +61,10 @@ class lstm_encoder(nn.Module):
         :                              element in the sequence
         '''
 
-        self.lstm_out, self.hidden = self.lstm(x_input.view(x_input.shape[0], x_input.shape[1], self.input_size))
-
-        # Concat states from the forward and the backward encoder
+        self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)
+        self.lstm_out, self.hidden = self.lstm(self.lstm_out_a)
+     
+        # Concat states from the forward and the backward states of the last encoder layer
         if self.bidirectional:
             h0 = self.hidden[0]
             h0_cat = torch.cat( (h0[0],h0[1]), dim=1).unsqueeze(0)
@@ -68,18 +76,18 @@ class lstm_encoder(nn.Module):
             
         return self.lstm_out, self.hidden
 
-    def init_hidden_zeros(self):
+    def init_hidden_zeros(self, layer):
 
         '''
         initialize hidden state
         : param batch_size:    x_input.shape[1]
         : return:              zeroed hidden state and cell state
         '''
-        torch.nn.init.zeros_(self.lstm.weight_ih_l0)
-        torch.nn.init.zeros_(self.lstm.weight_hh_l0)
+        torch.nn.init.zeros_(layer.weight_ih_l0)
+        torch.nn.init.zeros_(layer.weight_hh_l0)
         if self.bidirectional:
-            torch.nn.init.zeros_(self.lstm.weight_ih_l0_reverse)
-            torch.nn.init.zeros_(self.lstm.weight_hh_l0_reverse)
+            torch.nn.init.zeros_(layer.weight_ih_l0_reverse)
+            torch.nn.init.zeros_(layer.weight_hh_l0_reverse)
 
 
 class lstm_decoder(nn.Module):
@@ -185,11 +193,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         self.encoder = lstm_encoder(device = self.device, hidden_size = self.hidden_size, bidirectional = self.bidirectional)
         
         # Decoder, decoder input: target sequence, features taken as input hidden state
-        if self.bidirectional:
-            self.decoder = lstm_decoder(input_size = input_size, hidden_size = 2*self.hidden_size, device = self.device, attn = self.attn)
-        else:
-            self.decoder = lstm_decoder(input_size = input_size, hidden_size = self.hidden_size, device = self.device, attn = self.attn)
-        
+        self.decoder = lstm_decoder(input_size = input_size, hidden_size = self.encoder.last_hidden_size, device = self.device, attn = self.attn)
 
     def forward(self, input_batch, target_batch = None, teacher_forcing_ratio = None):
 

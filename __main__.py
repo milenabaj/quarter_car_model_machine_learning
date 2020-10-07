@@ -57,7 +57,7 @@ if __name__ == "__main__":
                         help = 'Defect heigh minimum') 
     parser.add_argument('--h_max', default = 0, type=int,
                         help = 'Defect heigh maximum') 
-    parser.add_argument('--nrows_to_load', default = 100,
+    parser.add_argument('--nrows_to_load', default = 1000,
                         help = 'Nrows to load from input (use for testing purposes).')
     
     
@@ -72,9 +72,9 @@ if __name__ == "__main__":
                         help = 'Test on test dataset.')
     parser.add_argument('--window_size', default = 5, type=int,
                         help = 'Window size.') 
-    parser.add_argument('--hidden_size', default = 4, type=int,
+    parser.add_argument('--hidden_size', default = 16, type=int,
                         help = 'Hidden size.') 
-    parser.add_argument('--attn', default = 'dot',
+    parser.add_argument('--attn', default = 'general',
                         help = 'Attention type to use in the model. Choose between dot and general.') 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
@@ -109,10 +109,11 @@ if __name__ == "__main__":
     # Other settings
     model_name = model_helpers.get_model_name(model_type)
     acc_to_severity_seq2seq = True # pass True for ac->severity seq2seq or False to do acc->class 
-    n_epochs = 50
+    n_epochs = 10
     learning_rate= 0.01
-    teacher_forcing_ratio = 0.6
-    batch_size = 10
+    teacher_forcing_ratio = 1.0
+    decrease_teacher_forcing_ratio = False
+    batch_size = 512
     num_workers = 0 #0
     patience = 30
     n_pred_plots = 1
@@ -275,7 +276,7 @@ if __name__ == "__main__":
             train_results.store_results_per_epoch(train_batch_results)
       
             # Reduce teacher forcing ratio for the next epoch:
-            if teacher_forcing_ratio >=0.02:
+            if decrease_teacher_forcing_ratio and teacher_forcing_ratio >=0.02:
                 teacher_forcing_ratio = teacher_forcing_ratio-0.02
                       
             # === Validate === #

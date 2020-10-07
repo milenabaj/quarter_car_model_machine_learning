@@ -160,7 +160,7 @@ class ModelInfo:
                 if datatype=='train' and batch_index==0:
                     plt.rc('font', size=12)
                     n_examples= 3
-                    n_features = self.model.hidden_size*2
+                    n_features = self.model.decoder.hidden_size
                     for example in range(n_examples):
                         fig, (ax1, ax2) = plt.subplots(1,2, sharey=True)
                         fig.suptitle(str(datatype) + ' data, example: ' + str(example), fontsize=12)
