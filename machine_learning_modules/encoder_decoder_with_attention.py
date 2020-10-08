@@ -207,7 +207,8 @@ class lstm_seq2seq_with_attn(nn.Module):
         :                                   element in the sequence
 
         '''
-        #input_batch = input_batch.flip(1)
+        # Reverse acc
+        input_batch = input_batch.flip(1)
         
         if target_batch is None:
             self.use_teacher_forcing = False # can't use teacher forcing if output sequence is not given
