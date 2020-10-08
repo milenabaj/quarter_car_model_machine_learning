@@ -114,7 +114,7 @@ class lstm_decoder(nn.Module):
 
         # LSTM Layer
         self.lstm_a = nn.LSTM(input_size = input_size, hidden_size = encoder_model.lstm_a.hidden_size*encoder_model.ndirs, num_layers = num_layers)
-        self.lstm = nn.LSTM(input_size = self.lstm_a.hidden_size, hidden_size = encoder_model.lstm.hidden_size * encoder_model.ndirs, num_layers = num_layers)
+        self.lstm = nn.LSTM(input_size =  input_size, hidden_size = encoder_model.lstm.hidden_size * encoder_model.ndirs, num_layers = num_layers)
                                      
         # Attention Layer if general
         if self.attn =='general':
