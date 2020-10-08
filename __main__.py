@@ -53,7 +53,7 @@ if __name__ == "__main__":
                         help = 'Defect width minimum') 
     parser.add_argument('--w_max', default =  np.inf, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = 0, type=int,
+    parser.add_argument('--h_min', default = -np.inf, type=int,
                         help = 'Defect height minimum') 
     parser.add_argument('--h_max', default =  np.inf, type=int,
                         help = 'Defect height maximum') 
