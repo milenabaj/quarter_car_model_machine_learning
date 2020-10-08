@@ -140,8 +140,8 @@ class lstm_decoder(nn.Module):
         
         # LSTM
         x_input.to(self.device)
-        self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)  
-        self.lstm_out, self.hidden = self.lstm(self.lstm_out_a, hidden_states)  
+        #self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)  
+        self.lstm_out, self.hidden = self.lstm(x_input, hidden_states)  
       
         # Dot attention 
         if self.attn =='dot':
