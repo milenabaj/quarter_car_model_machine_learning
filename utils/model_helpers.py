@@ -159,8 +159,8 @@ class ModelInfo:
                 # Plot features
                 if datatype=='train' and batch_index==0:
                     plt.rc('font', size=12)
-                    n_examples= 3
-                    n_features = self.model.decoder.hidden_size
+                    n_examples= 5
+                    n_features = self.model.encoder.lstm.hidden_size
                     for example in range(n_examples):
                         fig, (ax1, ax2) = plt.subplots(1,2, sharey=True)
                         fig.suptitle(str(datatype) + ' data, example: ' + str(example), fontsize=12)
