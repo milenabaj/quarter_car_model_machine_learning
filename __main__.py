@@ -51,11 +51,11 @@ if __name__ == "__main__":
                         help = 'Filter datasets based on speed. Pass None for no selection.') 
     parser.add_argument('--w_min', default = 0, type=int,
                         help = 'Defect width minimum') 
-    parser.add_argument('--w_max', default =  np.inf, type=int,
+    parser.add_argument('--w_max', default =  500, type=int,
                         help = 'Defect width maximum') 
-    parser.add_argument('--h_min', default = -np.inf, type=int,
+    parser.add_argument('--h_min', default = -500, type=int,
                         help = 'Defect height minimum') 
-    parser.add_argument('--h_max', default =  np.inf, type=int,
+    parser.add_argument('--h_max', default =  0, type=int,
                         help = 'Defect height maximum') 
     parser.add_argument('--nrows_to_load', default = 100,
                         help = 'Nrows to load from input (use for testing purposes).')
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_size', default = 16, type=int,
                         help = 'Hidden size.') 
     parser.add_argument('--attn', default = 'general',
-                        help = 'Attention type to use in the model. Choose between dot and general.') 
+                        help = 'Attention type to use in the model. Choose between dot, general and concat.') 
     # Directories
     parser.add_argument('--input_dir', default = '{0}/data/Golden-car-simulation-August-2020/train-val-test-normalized-split-into-windows-size-5'.format(git_repo_path),
                         help = 'Input directory containing train/valid/test subdirectories with prepared data split into windows.')
@@ -257,7 +257,6 @@ if __name__ == "__main__":
                     scaled_speed = scaled_speed.reshape(acc.shape[1],1).to(device)
                     out = model(acc, scaled_speed, targets)
                    
-              
                 # Compute loss
                 train_loss = criterion(out, targets)
                 train_batch_results.loss_total += train_loss.item()

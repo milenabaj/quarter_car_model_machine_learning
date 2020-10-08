@@ -43,13 +43,13 @@ class lstm_encoder(nn.Module):
         hidden_size_last = hidden_size_a *2
 
         # Define LSTM layers
-        self.lstm_a = nn.LSTM(input_size = input_size, hidden_size = hidden_size_a, num_layers = 1, bidirectional = self.bidirectional)
+        #self.lstm_a = nn.LSTM(input_size = input_size, hidden_size = hidden_size_a, num_layers = 1, bidirectional = self.bidirectional)
         #self.lstm_b = nn.LSTM(input_size = self.ndirs *hidden_size_a, hidden_size = hidden_size_b, num_layers = 1, bidirectional = self.bidirectional)
-        self.lstm = nn.LSTM(input_size = self.ndirs *hidden_size_a, hidden_size = hidden_size_last, num_layers = 1, bidirectional = self.bidirectional) #last
+        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = 1, bidirectional = self.bidirectional) #last
         self.last_hidden_size = self.ndirs * self.lstm.hidden_size
 
         # Initialize weights with zeros
-        self.init_hidden_zeros(self.lstm_a)
+        #self.init_hidden_zeros(self.lstm_a)
         self.init_hidden_zeros(self.lstm)
         
     def forward(self, x_input):
@@ -61,9 +61,9 @@ class lstm_encoder(nn.Module):
         :                              element in the sequence
         '''
 
-        self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)
+        #self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)
         #self.lstm_out_b, self.hidden_b = self.lstm_b(self.lstm_out_a)
-        self.lstm_out, self.hidden = self.lstm(self.lstm_out_a)
+        self.lstm_out, self.hidden = self.lstm(x_input)
      
         # Concat states from the forward and the backward states of the last encoder layer
         if self.bidirectional:
@@ -125,7 +125,7 @@ class lstm_decoder(nn.Module):
         self.linear = nn.Linear(2*self.lstm.hidden_size, output_size) #2 because the context vector is concatenated with the lstm out
         
 
-    def forward(self, x_input, hidden_states, encoder_output, t):
+    def forward(self, x_input, hidden_states, encoder_output, acc, t):
 
         '''
         : param x_input:                    should be 2D (batch_size, input_size)
@@ -153,7 +153,11 @@ class lstm_decoder(nn.Module):
         elif self.attn =='general':
             decoder_out = self.attention_layer( self.lstm_out.permute(1,0,2).squeeze(1) )# [batch size, hidden dim])
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
-            
+            t_min=t-20
+            t_max=t+20
+            self.scores[:,:t_min,:]=0
+            self.scores[:,t_max:,:]=0
+
         # Attention weights after softmax
         self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
         self.attn_weights.to(self.device)
@@ -210,7 +214,7 @@ class lstm_seq2seq_with_attn(nn.Module):
 
         '''
         # Reverse acc
-        input_batch = input_batch.flip(1)
+        #input_batch = input_batch.flip(1)
         
         if target_batch is None:
             self.use_teacher_forcing = False # can't use teacher forcing if output sequence is not given
@@ -246,7 +250,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         # Teacher forcing: Feed the target as the next input
         if use_teacher_forcing:
             for t in range(self.target_len):
-                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output, t)
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden, self.encoder_output, input_batch, t)
                
                 self.decoder_input = target_batch[t,:,:].unsqueeze(0).to(self.device) # current target will be the input in the next timestep
                
@@ -260,7 +264,7 @@ class lstm_seq2seq_with_attn(nn.Module):
         else:
             # Without teacher forcing: use its own predictions as the next input
             for t in range(self.target_len):
-                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output, t)
+                self.decoder_output, self.decoder_hidden, self.attn_weights_ts = self.decoder(self.decoder_input, self.decoder_hidden,  self.encoder_output, input_batch, t)
                 self.decoder_input = self.decoder_output.unsqueeze(0).to(self.device) # current prediction will be the input in the next timestep
                             
                 # Save attention weights
