@@ -155,8 +155,8 @@ class lstm_decoder(nn.Module):
             self.scores = torch.bmm(encoder_output.permute(1,0,2), decoder_out.unsqueeze(2))
             t_min=t-20
             t_max=t+20
-            self.scores[:,:t_min,:]=0
-            self.scores[:,t_max:,:]=0
+            self.scores[:,:t_min,:]=-100
+            self.scores[:,t_max:,:]=-100
 
         # Attention weights after softmax
         self.attn_weights = F.softmax(self.scores, dim=1) #(batch, number of ts, 1)
