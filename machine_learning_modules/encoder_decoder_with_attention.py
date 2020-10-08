@@ -112,7 +112,8 @@ class lstm_decoder(nn.Module):
         self.attn = attn
 
         # LSTM Layer
-        self.lstm = nn.LSTM(input_size = input_size, hidden_size = hidden_size, num_layers = num_layers)
+        self.lstm_a = nn.LSTM(input_size = input_size, hidden_size = int(hidden_size/2), num_layers = num_layers)
+        self.lstm = nn.LSTM(input_size = self.lstm_a.hidden_size,  hidden_size = hidden_size, num_layers = num_layers)
                                      
         # Attention Layer if general
         if self.attn =='general':
@@ -120,7 +121,7 @@ class lstm_decoder(nn.Module):
             torch.nn.init.zeros_(self.attention_layer.weight)
             
         # Final LSTM to Linear Layer
-        self.linear = nn.Linear(2*self.hidden_size, output_size) #2 because the context vector is concatenated with the lstm out
+        self.linear = nn.Linear(2*self.lstm.hidden_size, output_size) #2 because the context vector is concatenated with the lstm out
         
 
     def forward(self, x_input, hidden_states, encoder_output, t):
@@ -138,8 +139,9 @@ class lstm_decoder(nn.Module):
         
         # LSTM
         x_input.to(self.device)
-        self.lstm_out, self.hidden = self.lstm(x_input, hidden_states)  # init. hidden states to enc. hidden
-                
+        self.lstm_out_a, self.hidden_a = self.lstm_a(x_input)  # init. hidden states to enc. hidden
+        self.lstm_out, self.hidden = self.lstm(self.lstm_out_a, hidden_states)  # init. hidden states to enc. hidden 
+      
         # Dot attention 
         if self.attn =='dot':
             self.scores = torch.bmm(encoder_output.permute(1,0,2),self.lstm_out.permute(1,2,0)) #(batch, input_hidden_size, output_timestep(=1))
@@ -156,7 +158,7 @@ class lstm_decoder(nn.Module):
 
          # Context vector
         self.context_vector = torch.bmm(encoder_output.permute(1,2,0), self.attn_weights)
-    
+
         # Concat. context vector and lstm out along the hidden state dimension
         self.cat = torch.cat( (self.context_vector.permute(2,0,1),self.lstm_out), dim=2)
         self.cat = self.cat.squeeze(0) #-> [batch size, hidden dim]
