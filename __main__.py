@@ -117,7 +117,7 @@ if __name__ == "__main__":
     n_pred_plots = 1
     
     learning_rate= 0.001
-    teacher_forcing_ratio = 1.0
+    teacher_forcing_ratio = 0.6
     decrease_teacher_forcing_ratio = True
         
     # ======== SET ========= #
