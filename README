@@ -1,1 +1,2 @@
 
+Encoder-decoder (with and without attention) models for modelling of the road profle sequence from the acceleration sequence, done on simulated single-defect data.
